@@ -88,3 +88,10 @@ La API queda en `http://localhost:8081` (otro puerto: variable de entorno `PORT`
 ## Equipo
 
 **Las Torres** — UNAM, FES Aragón.
+
+| Integrantes |
+|---|
+| Ovando Sánchez Paulina |
+| Romero Gonzalez Diego |
+| Román Zarza Samuel Iván |
+| Yañez Medina Victor Enrique |
