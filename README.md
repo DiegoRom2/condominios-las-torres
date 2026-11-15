@@ -62,6 +62,13 @@ La API queda en `http://localhost:8081` (otro puerto: variable de entorno `PORT`
 - Swagger para probar desde el navegador: `http://localhost:8081/swagger-ui.html`
 - Colección de Postman: `postman/LasTorres.postman_collection.json`
 
+### Con Docker
+
+```bash
+docker build -t condominios-las-torres .
+docker run -p 8081:8081 -e DB_URL="..." -e DB_USER="..." -e DB_PASSWORD="..." condominios-las-torres
+```
+
 ## Endpoints
 
 | Método | Ruta | Descripción |
