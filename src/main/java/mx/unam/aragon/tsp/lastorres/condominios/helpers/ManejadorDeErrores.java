@@ -17,8 +17,9 @@ import mx.unam.aragon.tsp.lastorres.condominios.exceptions.ReglaNegocioException
 /**
  * Convierte los errores en respuestas JSON claras, para que la API
  * nunca regrese un error 500 cuando el usuario manda datos mal.
+ * Solo aplica a la API (paquete controllers); las pantallas tienen su propio manejo.
  */
-@RestControllerAdvice
+@RestControllerAdvice(basePackages = "mx.unam.aragon.tsp.lastorres.condominios.controllers")
 public class ManejadorDeErrores {
 
     @ExceptionHandler(NoEncontradoException.class)

@@ -1,0 +1,164 @@
+/* Estilos de Condominios Las Torres */
+:root {
+  --fondo: #f3f5f8;
+  --tarjeta: #ffffff;
+  --texto: #1c2733;
+  --texto-suave: #5d6b7a;
+  --borde: #dbe1e8;
+  --primario: #1f4e79;
+  --primario-oscuro: #163a5b;
+  --acento: #c8872b;
+  --exito-fondo: #e4f4ea;
+  --exito-texto: #1d6b3a;
+  --error-fondo: #fbe6e4;
+  --error-texto: #a12a22;
+  --radio: 10px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  background: var(--fondo);
+  color: var(--texto);
+  line-height: 1.5;
+}
+
+a { color: var(--primario); }
+
+/* ---------- Barra superior ---------- */
+.barra {
+  background: var(--primario);
+  color: #fff;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 24px;
+  padding: 12px 24px;
+}
+.marca {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #fff;
+  text-decoration: none;
+  letter-spacing: .3px;
+}
+.marca span { color: #f2c27a; }
+.menu { display: flex; flex-wrap: wrap; gap: 4px; flex: 1; }
+.menu a {
+  color: #e3ecf5;
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+}
+.menu a:hover { background: var(--primario-oscuro); color: #fff; }
+.sesion { display: flex; align-items: center; gap: 12px; font-size: .9rem; }
+.sesion form { margin: 0; }
+.etiqueta-rol {
+  background: rgba(255,255,255,.18);
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: .75rem;
+}
+
+/* ---------- Contenido ---------- */
+.contenedor { max-width: 1040px; margin: 0 auto; padding: 24px 16px 48px; }
+.encabezado {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+h1 { font-size: 1.6rem; margin: 0; }
+h2 { font-size: 1.15rem; margin: 0 0 12px; }
+.suave { color: var(--texto-suave); }
+
+.tarjeta {
+  background: var(--tarjeta);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+/* ---------- Avisos ---------- */
+.aviso { padding: 12px 16px; border-radius: var(--radio); margin-bottom: 16px; }
+.aviso-exito { background: var(--exito-fondo); color: var(--exito-texto); }
+.aviso-error { background: var(--error-fondo); color: var(--error-texto); }
+
+/* ---------- Botones ---------- */
+.boton {
+  display: inline-block;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  background: var(--primario);
+  color: #fff;
+}
+.boton:hover { background: var(--primario-oscuro); }
+.boton-secundario { background: #fff; color: var(--primario); border-color: var(--borde); }
+.boton-secundario:hover { background: var(--fondo); }
+.boton-peligro { background: #fff; color: var(--error-texto); border-color: #e9bdb8; }
+.boton-peligro:hover { background: var(--error-fondo); }
+.boton-chico { padding: 4px 10px; font-size: .85rem; }
+.boton-claro { background: transparent; color: #fff; border-color: rgba(255,255,255,.5); }
+.boton-claro:hover { background: var(--primario-oscuro); }
+
+/* ---------- Tablas ---------- */
+.tabla-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--borde); }
+th { font-size: .8rem; text-transform: uppercase; letter-spacing: .4px; color: var(--texto-suave); }
+tr:last-child td { border-bottom: none; }
+.acciones { display: flex; gap: 8px; flex-wrap: wrap; }
+.acciones form { margin: 0; }
+.vacio { text-align: center; color: var(--texto-suave); padding: 24px; }
+
+.pastilla { padding: 2px 10px; border-radius: 999px; font-size: .8rem; font-weight: 600; }
+.pastilla-dentro { background: #fdf0d9; color: #8a5a12; }
+.pastilla-salio { background: #e8edf2; color: var(--texto-suave); }
+
+/* ---------- Formularios ---------- */
+.formulario { max-width: 520px; }
+.campo { margin-bottom: 16px; }
+label { display: block; font-weight: 600; margin-bottom: 4px; }
+input, select {
+  width: 100%;
+  padding: 9px 12px;
+  font: inherit;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--texto);
+}
+input:focus, select:focus { outline: 2px solid #9dbfe0; border-color: var(--primario); }
+.error-campo { color: var(--error-texto); font-size: .85rem; margin: 4px 0 0; }
+.botones { display: flex; gap: 10px; margin-top: 20px; }
+.fila { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+/* ---------- Inicio ---------- */
+.resumen { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 20px; }
+.dato { background: var(--tarjeta); border: 1px solid var(--borde); border-radius: var(--radio); padding: 18px; }
+.dato .numero { font-size: 2rem; font-weight: 700; color: var(--primario); line-height: 1.1; }
+.dato .nombre { color: var(--texto-suave); font-size: .9rem; }
+.dato-acento .numero { color: var(--acento); }
+
+/* ---------- Login y error ---------- */
+.centrado { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 16px; }
+.caja-login { width: 100%; max-width: 380px; }
+.caja-login h1 { text-align: center; margin-bottom: 4px; }
+.caja-login .suave { text-align: center; margin: 0 0 20px; }
+.caja-login .boton { width: 100%; }
+.codigo-error { font-size: 4rem; font-weight: 700; color: var(--primario); margin: 0; line-height: 1; }
+
+@media (max-width: 600px) {
+  .fila { grid-template-columns: 1fr; }
+  .barra { padding: 12px 16px; }
+}

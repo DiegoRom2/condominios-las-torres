@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragmentos :: cabeza('Caseta')}"></head>
+<body>
+<header th:replace="~{fragmentos :: barra}"></header>
+<main class="contenedor">
+    <div class="encabezado">
+        <h1>Caseta de vigilancia</h1>
+        <a class="boton boton-secundario" th:href="@{/bitacora}">Ver bitácora</a>
+    </div>
+    <div th:replace="~{fragmentos :: avisos}"></div>
+
+    <section class="tarjeta">
+        <h2>Registrar entrada</h2>
+        <form th:action="@{/caseta/entrada}" th:object="${entrada}" method="post">
+            <div class="fila">
+                <div class="campo">
+                    <label for="visitanteId">Visitante autorizado</label>
+                    <select id="visitanteId" th:field="*{visitanteId}">
+                        <option value="">Selecciona un visitante…</option>
+                        <option th:each="v : ${visitantes}" th:value="${v.id}"
+                                th:text="${v.nombre + ' ' + v.apellidos + ' — ' + v.vivienda}"></option>
+                    </select>
+                    <p class="error-campo" th:errors="*{visitanteId}"></p>
+                </div>
+                <div class="campo">
+                    <label for="motivo">Motivo de la visita</label>
+                    <input id="motivo" type="text" th:field="*{motivo}" maxlength="120" placeholder="Ej. Visita familiar">
+                    <p class="error-campo" th:errors="*{motivo}"></p>
+                </div>
+            </div>
+            <button class="boton" type="submit">Registrar entrada</button>
+        </form>
+    </section>
+
+    <section class="tarjeta">
+        <h2>Dentro del condominio</h2>
+        <p class="vacio" th:if="${#lists.isEmpty(dentro)}">No hay visitantes dentro en este momento.</p>
+        <div class="tabla-scroll" th:unless="${#lists.isEmpty(dentro)}">
+            <table>
+                <thead>
+                <tr><th>Visitante</th><th>Vivienda</th><th>Motivo</th><th>Entrada</th><th></th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="a : ${dentro}">
+                    <td th:text="${a.visitante}"></td>
+                    <td th:text="${a.vivienda}"></td>
+                    <td th:text="${a.motivo}"></td>
+                    <td th:text="${#temporals.format(a.fechaEntrada, 'dd/MM/yyyy HH:mm')}"></td>
+                    <td>
+                        <form th:action="@{/caseta/{id}/salida(id=${a.id})}" method="post">
+                            <button class="boton boton-chico" type="submit">Registrar salida</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragmentos :: cabeza('Iniciar sesión')}"></head>
+<body>
+<main class="centrado">
+    <div class="caja-login tarjeta">
+        <h1>Las Torres</h1>
+        <p class="suave">Control de acceso del condominio</p>
+
+        <div class="aviso aviso-error" th:if="${param.error}">Usuario o contraseña incorrectos.</div>
+        <div class="aviso aviso-exito" th:if="${param.salir}">Cerraste sesión correctamente.</div>
+
+        <form th:action="@{/login}" method="post">
+            <div class="campo">
+                <label for="username">Usuario</label>
+                <input id="username" name="username" type="text" autocomplete="username" required autofocus>
+            </div>
+            <div class="campo">
+                <label for="password">Contraseña</label>
+                <input id="password" name="password" type="password" autocomplete="current-password" required>
+            </div>
+            <button class="boton" type="submit">Entrar</button>
+        </form>
+    </div>
+</main>
+</body>
+</html>

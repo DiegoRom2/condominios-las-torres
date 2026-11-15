@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragmentos :: cabeza('Error')}"></head>
+<body>
+<main class="centrado">
+    <div class="tarjeta" style="text-align:center; max-width:460px">
+        <p class="codigo-error" th:text="${status}">404</p>
+        <h1 th:if="${status == 403}">No tienes permiso para ver esta página</h1>
+        <h1 th:if="${status == 404}">No encontramos lo que buscas</h1>
+        <h1 th:unless="${status == 403 or status == 404}">Algo salió mal</h1>
+        <p class="suave" th:if="${mensaje}" th:text="${mensaje}"></p>
+        <p><a class="boton" th:href="@{/}">Volver al inicio</a></p>
+    </div>
+</main>
+</body>
+</html>

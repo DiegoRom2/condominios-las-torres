@@ -2,7 +2,9 @@
 
 API REST en **Java 21 + Spring Boot** para controlar quién entra y sale del condominio **Las Torres**: viviendas, residentes, visitantes autorizados y la bitácora de la caseta de vigilancia.
 
-> **Avance 2:** los datos se guardan en una base de datos **PostgreSQL en Neon** (JPA/Hibernate).
+> **Avance 3:** interfaz web con inicio de sesión y roles (Thymeleaf + Spring Security), base de datos **PostgreSQL en Neon** y despliegue en **Render**.
+
+**Demo en línea:** https://condominios-las-torres.onrender.com (el plan gratuito tarda cerca de un minuto en despertar)
 
 ## ¿Qué hace?
 
@@ -20,11 +22,26 @@ API REST en **Java 21 + Spring Boot** para controlar quién entra y sale del con
 - Un visitante no puede entrar dos veces sin haber salido, ni registrar dos salidas del mismo acceso.
 - No se borra un visitante mientras está dentro del condominio.
 
+## Usuarios y roles
+
+El sistema pide iniciar sesión. Hay dos roles:
+
+| Rol | Usuario inicial | Qué puede hacer |
+|---|---|---|
+| Administrador | `admin` | Todo: viviendas, residentes, visitantes, caseta, bitácora y Swagger |
+| Guardia | `guardia` | Caseta: registrar entradas y salidas, y consultar la bitácora |
+
+Las contraseñas se guardan cifradas con BCrypt. Los dos usuarios iniciales se crean la primera vez que arranca la aplicación, con las contraseñas de las variables de entorno `ADMIN_PASSWORD` y `GUARDIA_PASSWORD`. Si no están definidas, se genera una contraseña al azar que aparece una sola vez en el log de arranque.
+
+La API (`/api/v1/...`) usa los mismos usuarios con autenticación HTTP Basic.
+
 ## Estructura del proyecto
 
 ```
 src/main/java/mx/unam/aragon/tsp/lastorres/condominios
 ├── controllers      → endpoints REST (/api/v1/...)
+├── webController    → pantallas web (Thymeleaf)
+├── seguridad        → inicio de sesión y permisos por rol (Spring Security)
 ├── businessLayer    → reglas de negocio de cada módulo
 ├── dtos             → XDto (respuesta) y XDtoIn (entrada con validaciones)
 ├── entities         → tablas de la base de datos (JPA)
@@ -57,10 +74,10 @@ Al arrancar por primera vez, Hibernate crea las tablas y se cargan datos de ejem
 gradlew.bat bootRun
 ```
 
-La API queda en `http://localhost:8081` (otro puerto: variable de entorno `PORT`).
+El sistema queda en `http://localhost:8081` (otro puerto: variable de entorno `PORT`).
 
 - Swagger para probar desde el navegador: `http://localhost:8081/swagger-ui.html`
-- Colección de Postman: `postman/LasTorres.postman_collection.json`
+- Colección de Postman: `postman/LasTorres.postman_collection.json` (en sus variables se ponen `usuario` y `contrasena`)
 
 ### Con Docker
 

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragmentos :: cabeza('Residentes')}"></head>
+<body>
+<header th:replace="~{fragmentos :: barra}"></header>
+<main class="contenedor">
+    <div class="encabezado">
+        <h1>Residentes</h1>
+        <a class="boton" th:href="@{/residentes/nuevo}">Nuevo residente</a>
+    </div>
+    <div th:replace="~{fragmentos :: avisos}"></div>
+
+    <section class="tarjeta">
+        <p class="vacio" th:if="${#lists.isEmpty(residentesLista)}">No hay residentes registrados.</p>
+        <div class="tabla-scroll" th:unless="${#lists.isEmpty(residentesLista)}">
+            <table>
+                <thead>
+                <tr><th>Nombre</th><th>Vivienda</th><th>Correo</th><th>Teléfono</th><th></th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="r : ${residentesLista}">
+                    <td th:text="${r.nombre + ' ' + r.apellidos}"></td>
+                    <td th:text="${r.vivienda}"></td>
+                    <td th:text="${r.correo}"></td>
+                    <td th:text="${r.telefono}"></td>
+                    <td>
+                        <div class="acciones">
+                            <a class="boton boton-chico boton-secundario" th:href="@{/residentes/{id}/editar(id=${r.id})}">Editar</a>
+                            <form th:action="@{/residentes/{id}/borrar(id=${r.id})}" method="post"
+                                  onsubmit="return confirm('¿Borrar a este residente?')">
+                                <button class="boton boton-chico boton-peligro" type="submit">Borrar</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

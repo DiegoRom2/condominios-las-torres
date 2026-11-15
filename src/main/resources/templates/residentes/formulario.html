@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragmentos :: cabeza(${titulo})}"></head>
+<body>
+<header th:replace="~{fragmentos :: barra}"></header>
+<main class="contenedor">
+    <div class="encabezado"><h1 th:text="${titulo}">Residente</h1></div>
+    <div th:replace="~{fragmentos :: avisos}"></div>
+
+    <section class="tarjeta formulario">
+        <form th:action="@{${accion}}" th:object="${residente}" method="post">
+            <div class="campo">
+                <label for="nombre">Nombre</label>
+                <input id="nombre" type="text" th:field="*{nombre}" maxlength="60">
+                <p class="error-campo" th:errors="*{nombre}"></p>
+            </div>
+            <div class="campo">
+                <label for="apellidos">Apellidos</label>
+                <input id="apellidos" type="text" th:field="*{apellidos}" maxlength="80">
+                <p class="error-campo" th:errors="*{apellidos}"></p>
+            </div>
+            <div class="campo">
+                <label for="correo">Correo</label>
+                <input id="correo" type="email" th:field="*{correo}" placeholder="nombre@ejemplo.com">
+                <p class="error-campo" th:errors="*{correo}"></p>
+            </div>
+            <div class="campo">
+                <label for="telefono">Teléfono (10 dígitos)</label>
+                <input id="telefono" type="tel" th:field="*{telefono}" maxlength="10" placeholder="5512345678">
+                <p class="error-campo" th:errors="*{telefono}"></p>
+            </div>
+            <div class="campo">
+                <label for="viviendaId">Vivienda</label>
+                <select id="viviendaId" th:field="*{viviendaId}">
+                    <option value="">Selecciona una vivienda…</option>
+                    <option th:each="v : ${viviendas}" th:value="${v.id}" th:text="${v.etiqueta}"></option>
+                </select>
+                <p class="error-campo" th:errors="*{viviendaId}"></p>
+            </div>
+            <div class="botones">
+                <button class="boton" type="submit">Guardar</button>
+                <a class="boton boton-secundario" th:href="@{/residentes}">Cancelar</a>
+            </div>
+        </form>
+    </section>
+</main>
+</body>
+</html>

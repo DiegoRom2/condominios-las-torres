@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragmentos :: cabeza('Visitantes')}"></head>
+<body>
+<header th:replace="~{fragmentos :: barra}"></header>
+<main class="contenedor">
+    <div class="encabezado">
+        <h1>Visitantes autorizados</h1>
+        <a class="boton" th:href="@{/visitantes/nuevo}">Nuevo visitante</a>
+    </div>
+    <div th:replace="~{fragmentos :: avisos}"></div>
+
+    <section class="tarjeta">
+        <p class="vacio" th:if="${#lists.isEmpty(visitantesLista)}">No hay visitantes registrados.</p>
+        <div class="tabla-scroll" th:unless="${#lists.isEmpty(visitantesLista)}">
+            <table>
+                <thead>
+                <tr><th>Nombre</th><th>Placas</th><th>Autorizado por</th><th>Vivienda</th><th></th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="v : ${visitantesLista}">
+                    <td th:text="${v.nombre + ' ' + v.apellidos}"></td>
+                    <td th:text="${#strings.isEmpty(v.placas)} ? '—' : ${v.placas}"></td>
+                    <td th:text="${v.residente}"></td>
+                    <td th:text="${v.vivienda}"></td>
+                    <td>
+                        <div class="acciones">
+                            <a class="boton boton-chico boton-secundario" th:href="@{/visitantes/{id}/editar(id=${v.id})}">Editar</a>
+                            <form th:action="@{/visitantes/{id}/borrar(id=${v.id})}" method="post"
+                                  onsubmit="return confirm('¿Borrar a este visitante?')">
+                                <button class="boton boton-chico boton-peligro" type="submit">Borrar</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

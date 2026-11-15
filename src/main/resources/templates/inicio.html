@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragmentos :: cabeza('Inicio')}"></head>
+<body>
+<header th:replace="~{fragmentos :: barra}"></header>
+<main class="contenedor">
+    <div class="encabezado">
+        <h1>Condominio Las Torres</h1>
+        <a class="boton" th:href="@{/caseta}">Ir a la caseta</a>
+    </div>
+
+    <section class="resumen">
+        <div class="dato dato-acento">
+            <div class="numero" th:text="${#lists.size(dentro)}">0</div>
+            <div class="nombre">Visitantes dentro ahora</div>
+        </div>
+        <div class="dato">
+            <div class="numero" th:text="${totalViviendas}">0</div>
+            <div class="nombre">Viviendas</div>
+        </div>
+        <div class="dato">
+            <div class="numero" th:text="${totalResidentes}">0</div>
+            <div class="nombre">Residentes</div>
+        </div>
+        <div class="dato">
+            <div class="numero" th:text="${totalVisitantes}">0</div>
+            <div class="nombre">Visitantes autorizados</div>
+        </div>
+    </section>
+
+    <section class="tarjeta">
+        <h2>Quién está dentro</h2>
+        <p class="vacio" th:if="${#lists.isEmpty(dentro)}">No hay visitantes dentro del condominio.</p>
+        <div class="tabla-scroll" th:unless="${#lists.isEmpty(dentro)}">
+            <table>
+                <thead>
+                <tr><th>Visitante</th><th>Vivienda</th><th>Motivo</th><th>Entrada</th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="a : ${dentro}">
+                    <td th:text="${a.visitante}"></td>
+                    <td th:text="${a.vivienda}"></td>
+                    <td th:text="${a.motivo}"></td>
+                    <td th:text="${#temporals.format(a.fechaEntrada, 'dd/MM/yyyy HH:mm')}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

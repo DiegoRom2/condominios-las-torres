@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<!-- Encabezado común de todas las páginas -->
+<head th:fragment="cabeza(titulo)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${titulo} + ' · Las Torres'">Las Torres</title>
+    <link rel="stylesheet" th:href="@{/css/estilos.css}">
+</head>
+
+<body>
+
+<!-- Barra de navegación: el menú cambia según el rol -->
+<header class="barra" th:fragment="barra">
+    <a class="marca" th:href="@{/}">Las <span>Torres</span></a>
+    <nav class="menu">
+        <a th:href="@{/caseta}">Caseta</a>
+        <a th:href="@{/bitacora}">Bitácora</a>
+        <a th:if="${esAdmin}" th:href="@{/visitantes}">Visitantes</a>
+        <a th:if="${esAdmin}" th:href="@{/residentes}">Residentes</a>
+        <a th:if="${esAdmin}" th:href="@{/viviendas}">Viviendas</a>
+    </nav>
+    <div class="sesion">
+        <span th:text="${usuarioActual}">usuario</span>
+        <span class="etiqueta-rol" th:text="${esAdmin} ? 'Administrador' : 'Guardia'">Rol</span>
+        <form th:action="@{/logout}" method="post">
+            <button class="boton boton-chico boton-claro" type="submit">Salir</button>
+        </form>
+    </div>
+</header>
+
+<!-- Mensajes de éxito o error después de una acción -->
+<div th:fragment="avisos">
+    <div class="aviso aviso-exito" th:if="${mensaje}" th:text="${mensaje}"></div>
+    <div class="aviso aviso-error" th:if="${error}" th:text="${error}"></div>
+</div>
+
+</body>
+</html>

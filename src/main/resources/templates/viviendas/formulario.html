@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragmentos :: cabeza(${titulo})}"></head>
+<body>
+<header th:replace="~{fragmentos :: barra}"></header>
+<main class="contenedor">
+    <div class="encabezado"><h1 th:text="${titulo}">Vivienda</h1></div>
+    <div th:replace="~{fragmentos :: avisos}"></div>
+
+    <section class="tarjeta formulario">
+        <form th:action="@{${accion}}" th:object="${vivienda}" method="post">
+            <div class="campo">
+                <label for="torre">Torre</label>
+                <input id="torre" type="text" th:field="*{torre}" maxlength="10" placeholder="Ej. A">
+                <p class="error-campo" th:errors="*{torre}"></p>
+            </div>
+            <div class="campo">
+                <label for="numero">Número de departamento</label>
+                <input id="numero" type="text" th:field="*{numero}" maxlength="10" placeholder="Ej. 101">
+                <p class="error-campo" th:errors="*{numero}"></p>
+            </div>
+            <div class="campo">
+                <label for="piso">Piso</label>
+                <input id="piso" type="number" th:field="*{piso}" min="0" max="50" required>
+                <p class="error-campo" th:errors="*{piso}"></p>
+            </div>
+            <div class="botones">
+                <button class="boton" type="submit">Guardar</button>
+                <a class="boton boton-secundario" th:href="@{/viviendas}">Cancelar</a>
+            </div>
+        </form>
+    </section>
+</main>
+</body>
+</html>

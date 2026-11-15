@@ -1,13 +1,21 @@
 {
   "info": {
     "name": "Condominios Las Torres",
-    "description": "Pruebas de la API de control de acceso (avance 1, datos en memoria).",
+    "description": "Pruebas de la API de control de acceso. Usa HTTP Basic: llena las variables usuario y contrasena de la colección.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "baseUrl",
       "value": "http://localhost:8081"
+    },
+    {
+      "key": "usuario",
+      "value": "admin"
+    },
+    {
+      "key": "contrasena",
+      "value": ""
     }
   ],
   "item": [
@@ -542,5 +550,20 @@
         }
       ]
     }
-  ]
+  ],
+  "auth": {
+    "type": "basic",
+    "basic": [
+      {
+        "key": "username",
+        "value": "{{usuario}}",
+        "type": "string"
+      },
+      {
+        "key": "password",
+        "value": "{{contrasena}}",
+        "type": "string"
+      }
+    ]
+  }
 }

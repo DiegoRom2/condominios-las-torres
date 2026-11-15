@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragmentos :: cabeza('Viviendas')}"></head>
+<body>
+<header th:replace="~{fragmentos :: barra}"></header>
+<main class="contenedor">
+    <div class="encabezado">
+        <h1>Viviendas</h1>
+        <a class="boton" th:href="@{/viviendas/nueva}">Nueva vivienda</a>
+    </div>
+    <div th:replace="~{fragmentos :: avisos}"></div>
+
+    <section class="tarjeta">
+        <p class="vacio" th:if="${#lists.isEmpty(viviendas)}">No hay viviendas registradas.</p>
+        <div class="tabla-scroll" th:unless="${#lists.isEmpty(viviendas)}">
+            <table>
+                <thead>
+                <tr><th>Torre</th><th>Número</th><th>Piso</th><th></th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="v : ${viviendas}">
+                    <td th:text="${v.torre}"></td>
+                    <td th:text="${v.numero}"></td>
+                    <td th:text="${v.piso}"></td>
+                    <td>
+                        <div class="acciones">
+                            <a class="boton boton-chico boton-secundario" th:href="@{/viviendas/{id}/editar(id=${v.id})}">Editar</a>
+                            <form th:action="@{/viviendas/{id}/borrar(id=${v.id})}" method="post"
+                                  onsubmit="return confirm('¿Borrar esta vivienda?')">
+                                <button class="boton boton-chico boton-peligro" type="submit">Borrar</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>
