@@ -34,9 +34,12 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-	// Siguiente avance (base de datos en Neon):
-	// implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	// runtimeOnly 'org.postgresql:postgresql'
+	// Base de datos: JPA/Hibernate + PostgreSQL (Neon)
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	runtimeOnly 'org.postgresql:postgresql'
+
+	// Base de datos en memoria solo para las pruebas automáticas (no toca Neon)
+	testRuntimeOnly 'com.h2database:h2'
 }
 
 // Para que los acentos y la ñ se compilen bien también en Windows

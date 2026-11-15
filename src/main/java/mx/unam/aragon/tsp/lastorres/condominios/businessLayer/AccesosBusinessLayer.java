@@ -2,18 +2,20 @@ package mx.unam.aragon.tsp.lastorres.condominios.businessLayer;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Comparator;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import mx.unam.aragon.tsp.lastorres.condominios.dtos.AccesoDto;
 import mx.unam.aragon.tsp.lastorres.condominios.dtos.AccesoDtoIn;
 import mx.unam.aragon.tsp.lastorres.condominios.dtos.IdDto;
-import mx.unam.aragon.tsp.lastorres.condominios.dtos.VisitanteDto;
+import mx.unam.aragon.tsp.lastorres.condominios.entities.AccesoEntity;
+import mx.unam.aragon.tsp.lastorres.condominios.entities.VisitanteEntity;
 import mx.unam.aragon.tsp.lastorres.condominios.exceptions.NoEncontradoException;
 import mx.unam.aragon.tsp.lastorres.condominios.exceptions.ReglaNegocioException;
-import mx.unam.aragon.tsp.lastorres.condominios.helpers.DatosEnMemoria;
+import mx.unam.aragon.tsp.lastorres.condominios.helpers.Mappers;
+import mx.unam.aragon.tsp.lastorres.condominios.repositories.IAccesoRepository;
 
 /**
  * Bitácora de la caseta: entradas y salidas de visitantes.
@@ -25,68 +27,67 @@ public class AccesosBusinessLayer {
     /** Hora de la CDMX aunque el servidor en la nube esté en otra zona. */
     private static final ZoneId ZONA_HORARIA = ZoneId.of("America/Mexico_City");
 
-    private final DatosEnMemoria datos;
+    private final IAccesoRepository accesoRepository;
     private final VisitantesBusinessLayer visitantesBusinessLayer;
 
-    public AccesosBusinessLayer(DatosEnMemoria datos, VisitantesBusinessLayer visitantesBusinessLayer) {
-        this.datos = datos;
+    public AccesosBusinessLayer(IAccesoRepository accesoRepository, VisitantesBusinessLayer visitantesBusinessLayer) {
+        this.accesoRepository = accesoRepository;
         this.visitantesBusinessLayer = visitantesBusinessLayer;
     }
 
     /** Todos los accesos, del más reciente al más antiguo. */
     public List<AccesoDto> obtenerTodos() {
-        return datos.getAccesos().stream()
-                .sorted(Comparator.comparing(AccesoDto::getFechaEntrada).reversed())
+        return accesoRepository.findAllByOrderByFechaEntradaDesc().stream()
+                .map(Mappers::toDto)
                 .toList();
     }
 
     /** Visitantes que entraron y todavía no registran su salida. */
     public List<AccesoDto> obtenerDentro() {
-        return obtenerTodos().stream()
-                .filter(AccesoDto::isDentro)
+        return accesoRepository.findByFechaSalidaIsNullOrderByFechaEntradaDesc().stream()
+                .map(Mappers::toDto)
                 .toList();
     }
 
     public AccesoDto obtenerPorId(int id) {
-        return datos.getAccesos().stream()
-                .filter(a -> a.getId() == id)
-                .findFirst()
-                .orElseThrow(() -> new NoEncontradoException("No existe el acceso con id " + id));
+        return Mappers.toDto(obtenerEntidad(id));
     }
 
+    @Transactional
     public IdDto registrarEntrada(AccesoDtoIn dtoIn) {
-        VisitanteDto visitante = visitantesBusinessLayer.obtenerPorId(dtoIn.getVisitanteId());
+        VisitanteEntity visitante = visitantesBusinessLayer.obtenerEntidad(dtoIn.getVisitanteId());
+        String nombre = visitante.getNombre() + " " + visitante.getApellidos();
 
-        boolean yaEstaDentro = datos.getAccesos().stream()
-                .anyMatch(a -> a.getVisitanteId() == visitante.getId() && a.isDentro());
-        if (yaEstaDentro) {
-            throw new ReglaNegocioException(
-                    visitante.getNombre() + " " + visitante.getApellidos() + " ya está dentro del condominio");
+        if (accesoRepository.existsByVisitante_IdAndFechaSalidaIsNull(visitante.getId())) {
+            throw new ReglaNegocioException(nombre + " ya está dentro del condominio");
         }
 
-        int id = datos.getSiguienteIdAcceso().getAndIncrement();
-        // Se guarda una "foto" del nombre y la vivienda para que la bitácora
-        // no cambie aunque después se edite o borre el visitante.
-        datos.getAccesos().add(new AccesoDto(
-                id,
-                visitante.getId(),
-                visitante.getNombre() + " " + visitante.getApellidos(),
-                visitante.getVivienda(),
+        AccesoEntity entity = accesoRepository.save(new AccesoEntity(
+                visitante,
+                nombre,
+                Mappers.etiqueta(visitante.getResidente().getVivienda()),
                 dtoIn.getMotivo().trim(),
-                LocalDateTime.now(ZONA_HORARIA),
-                null));
+                LocalDateTime.now(ZONA_HORARIA)));
 
-        return new IdDto(id, "Entrada registrada");
+        return new IdDto(entity.getId(), "Entrada registrada");
     }
 
+    @Transactional
     public IdDto registrarSalida(int id) {
-        AccesoDto acceso = obtenerPorId(id);
+        AccesoEntity entity = obtenerEntidad(id);
 
-        if (!acceso.isDentro()) {
+        if (entity.getFechaSalida() != null) {
             throw new ReglaNegocioException("La salida de este acceso ya se había registrado");
         }
 
-        acceso.setFechaSalida(LocalDateTime.now(ZONA_HORARIA));
+        entity.setFechaSalida(LocalDateTime.now(ZONA_HORARIA));
+        accesoRepository.save(entity);
+
         return new IdDto(id, "Salida registrada");
+    }
+
+    private AccesoEntity obtenerEntidad(int id) {
+        return accesoRepository.findById(id)
+                .orElseThrow(() -> new NoEncontradoException("No existe el acceso con id " + id));
     }
 }

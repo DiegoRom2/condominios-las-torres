@@ -2,9 +2,7 @@
 
 API REST en **Java 21 + Spring Boot** para controlar quién entra y sale del condominio **Las Torres**: viviendas, residentes, visitantes autorizados y la bitácora de la caseta de vigilancia.
 
-> **Avance 1:** estructura del proyecto con DTOs, controladores y servicios (business layer).
-> Por ahora los datos viven en memoria (`helpers/DatosEnMemoria`) y se reinician al apagar la app.
-> En el siguiente avance se conecta la base de datos PostgreSQL en Neon.
+> **Avance 2:** los datos se guardan en una base de datos **PostgreSQL en Neon** (JPA/Hibernate).
 
 ## ¿Qué hace?
 
@@ -29,13 +27,27 @@ src/main/java/mx/unam/aragon/tsp/lastorres/condominios
 ├── controllers      → endpoints REST (/api/v1/...)
 ├── businessLayer    → reglas de negocio de cada módulo
 ├── dtos             → XDto (respuesta) y XDtoIn (entrada con validaciones)
+├── entities         → tablas de la base de datos (JPA)
+├── repositories     → acceso a la base de datos (JpaRepository)
 ├── exceptions       → NoEncontradoException (404), ReglaNegocioException (409)
-└── helpers          → DatosEnMemoria y ManejadorDeErrores
+└── helpers          → Mappers, DatosIniciales y ManejadorDeErrores
 ```
 
 ## ¿Cómo se echa a andar?
 
-Requisitos: **JDK 21**.
+Requisitos: **JDK 21** y una base de datos PostgreSQL (el proyecto usa [Neon](https://neon.tech)).
+
+Las credenciales **no** están en el código: se leen de tres variables de entorno.
+
+| Variable | Ejemplo |
+|---|---|
+| `DB_URL` | `jdbc:postgresql://HOST/neondb?sslmode=require` |
+| `DB_USER` | `neondb_owner` |
+| `DB_PASSWORD` | la contraseña de la base |
+
+En Windows se configuran una sola vez con `setx DB_URL "..."` (y lo mismo para las otras dos); después hay que reabrir la terminal o VS Code.
+
+Al arrancar por primera vez, Hibernate crea las tablas y se cargan datos de ejemplo.
 
 ```bash
 # Linux / Mac

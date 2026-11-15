@@ -3,13 +3,18 @@ package mx.unam.aragon.tsp.lastorres.condominios.businessLayer;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import mx.unam.aragon.tsp.lastorres.condominios.dtos.IdDto;
 import mx.unam.aragon.tsp.lastorres.condominios.dtos.ResidenteDto;
 import mx.unam.aragon.tsp.lastorres.condominios.dtos.ResidenteDtoIn;
+import mx.unam.aragon.tsp.lastorres.condominios.entities.ResidenteEntity;
+import mx.unam.aragon.tsp.lastorres.condominios.entities.ViviendaEntity;
 import mx.unam.aragon.tsp.lastorres.condominios.exceptions.NoEncontradoException;
 import mx.unam.aragon.tsp.lastorres.condominios.exceptions.ReglaNegocioException;
-import mx.unam.aragon.tsp.lastorres.condominios.helpers.DatosEnMemoria;
+import mx.unam.aragon.tsp.lastorres.condominios.helpers.Mappers;
+import mx.unam.aragon.tsp.lastorres.condominios.repositories.IResidenteRepository;
+import mx.unam.aragon.tsp.lastorres.condominios.repositories.IVisitanteRepository;
 
 /**
  * Reglas de negocio de los residentes.
@@ -17,89 +22,87 @@ import mx.unam.aragon.tsp.lastorres.condominios.helpers.DatosEnMemoria;
 @Service
 public class ResidentesBusinessLayer {
 
-    private final DatosEnMemoria datos;
+    private final IResidenteRepository residenteRepository;
+    private final IVisitanteRepository visitanteRepository;
     private final ViviendasBusinessLayer viviendasBusinessLayer;
 
-    public ResidentesBusinessLayer(DatosEnMemoria datos, ViviendasBusinessLayer viviendasBusinessLayer) {
-        this.datos = datos;
+    public ResidentesBusinessLayer(IResidenteRepository residenteRepository,
+            IVisitanteRepository visitanteRepository,
+            ViviendasBusinessLayer viviendasBusinessLayer) {
+        this.residenteRepository = residenteRepository;
+        this.visitanteRepository = visitanteRepository;
         this.viviendasBusinessLayer = viviendasBusinessLayer;
     }
 
     public List<ResidenteDto> obtenerTodos() {
-        return datos.getResidentes().stream()
-                .map(this::completarVivienda)
+        return residenteRepository.findByActivoTrueOrderByIdAsc().stream()
+                .map(Mappers::toDto)
                 .toList();
     }
 
     public ResidenteDto obtenerPorId(int id) {
-        ResidenteDto residente = datos.getResidentes().stream()
-                .filter(r -> r.getId() == id)
-                .findFirst()
-                .orElseThrow(() -> new NoEncontradoException("No existe el residente con id " + id));
-        return completarVivienda(residente);
+        return Mappers.toDto(obtenerEntidad(id));
     }
 
+    /** Lo usan otros business layers para validar que el residente exista. */
+    public ResidenteEntity obtenerEntidad(int id) {
+        return residenteRepository.findByIdAndActivoTrue(id)
+                .orElseThrow(() -> new NoEncontradoException("No existe el residente con id " + id));
+    }
+
+    @Transactional
     public IdDto agregar(ResidenteDtoIn dtoIn) {
         // Si la vivienda no existe, esto lanza el error 404
-        viviendasBusinessLayer.obtenerPorId(dtoIn.getViviendaId());
-        validarCorreoUnico(dtoIn.getCorreo(), 0);
+        ViviendaEntity vivienda = viviendasBusinessLayer.obtenerEntidad(dtoIn.getViviendaId());
+        String correo = dtoIn.getCorreo().trim().toLowerCase();
+        validarCorreoUnico(correo, 0);
 
-        int id = datos.getSiguienteIdResidente().getAndIncrement();
-        datos.getResidentes().add(new ResidenteDto(
-                id,
+        ResidenteEntity entity = residenteRepository.save(new ResidenteEntity(
                 dtoIn.getNombre().trim(),
                 dtoIn.getApellidos().trim(),
-                dtoIn.getCorreo().trim().toLowerCase(),
+                correo,
                 dtoIn.getTelefono(),
-                dtoIn.getViviendaId(),
-                null));
+                vivienda));
 
-        return new IdDto(id, "Residente registrado");
+        return new IdDto(entity.getId(), "Residente registrado");
     }
 
+    @Transactional
     public IdDto actualizar(int id, ResidenteDtoIn dtoIn) {
-        ResidenteDto residente = obtenerPorId(id);
-        viviendasBusinessLayer.obtenerPorId(dtoIn.getViviendaId());
-        validarCorreoUnico(dtoIn.getCorreo(), id);
+        ResidenteEntity entity = obtenerEntidad(id);
+        ViviendaEntity vivienda = viviendasBusinessLayer.obtenerEntidad(dtoIn.getViviendaId());
+        String correo = dtoIn.getCorreo().trim().toLowerCase();
+        validarCorreoUnico(correo, id);
 
-        residente.setNombre(dtoIn.getNombre().trim());
-        residente.setApellidos(dtoIn.getApellidos().trim());
-        residente.setCorreo(dtoIn.getCorreo().trim().toLowerCase());
-        residente.setTelefono(dtoIn.getTelefono());
-        residente.setViviendaId(dtoIn.getViviendaId());
+        entity.setNombre(dtoIn.getNombre().trim());
+        entity.setApellidos(dtoIn.getApellidos().trim());
+        entity.setCorreo(correo);
+        entity.setTelefono(dtoIn.getTelefono());
+        entity.setVivienda(vivienda);
+        residenteRepository.save(entity);
 
         return new IdDto(id, "Residente actualizado");
     }
 
+    @Transactional
     public IdDto borrar(int id) {
-        ResidenteDto residente = obtenerPorId(id);
+        ResidenteEntity entity = obtenerEntidad(id);
 
-        boolean tieneVisitantes = datos.getVisitantes().stream()
-                .anyMatch(v -> v.getResidenteId() == id);
-        if (tieneVisitantes) {
+        if (visitanteRepository.existsByResidente_IdAndActivoTrue(id)) {
             throw new ReglaNegocioException(
                     "No se puede borrar al residente porque tiene visitantes autorizados");
         }
 
-        datos.getResidentes().remove(residente);
+        entity.setActivo(false);
+        residenteRepository.save(entity);
+
         return new IdDto(id, "Residente borrado");
     }
 
     /** Dos residentes no pueden compartir correo (ahí llegarán las notificaciones). */
     private void validarCorreoUnico(String correo, int idActual) {
-        boolean repetido = datos.getResidentes().stream()
-                .anyMatch(r -> r.getId() != idActual && r.getCorreo().equalsIgnoreCase(correo.trim()));
-        if (repetido) {
+        if (residenteRepository.existsByCorreoIgnoreCaseAndActivoTrueAndIdNot(correo, idActual)) {
             throw new ReglaNegocioException("Ya hay un residente registrado con el correo " + correo);
         }
-    }
-
-    /** Agrega el texto "Torre A - 101" para que la respuesta sea más clara. */
-    private ResidenteDto completarVivienda(ResidenteDto residente) {
-        datos.getViviendas().stream()
-                .filter(v -> v.getId() == residente.getViviendaId())
-                .findFirst()
-                .ifPresent(v -> residente.setVivienda(v.getEtiqueta()));
-        return residente;
     }
 }

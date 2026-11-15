@@ -3,13 +3,18 @@ package mx.unam.aragon.tsp.lastorres.condominios.businessLayer;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import mx.unam.aragon.tsp.lastorres.condominios.dtos.IdDto;
 import mx.unam.aragon.tsp.lastorres.condominios.dtos.VisitanteDto;
 import mx.unam.aragon.tsp.lastorres.condominios.dtos.VisitanteDtoIn;
+import mx.unam.aragon.tsp.lastorres.condominios.entities.ResidenteEntity;
+import mx.unam.aragon.tsp.lastorres.condominios.entities.VisitanteEntity;
 import mx.unam.aragon.tsp.lastorres.condominios.exceptions.NoEncontradoException;
 import mx.unam.aragon.tsp.lastorres.condominios.exceptions.ReglaNegocioException;
-import mx.unam.aragon.tsp.lastorres.condominios.helpers.DatosEnMemoria;
+import mx.unam.aragon.tsp.lastorres.condominios.helpers.Mappers;
+import mx.unam.aragon.tsp.lastorres.condominios.repositories.IAccesoRepository;
+import mx.unam.aragon.tsp.lastorres.condominios.repositories.IVisitanteRepository;
 
 /**
  * Reglas de negocio de los visitantes autorizados.
@@ -17,87 +22,78 @@ import mx.unam.aragon.tsp.lastorres.condominios.helpers.DatosEnMemoria;
 @Service
 public class VisitantesBusinessLayer {
 
-    private final DatosEnMemoria datos;
+    private final IVisitanteRepository visitanteRepository;
+    private final IAccesoRepository accesoRepository;
     private final ResidentesBusinessLayer residentesBusinessLayer;
 
-    public VisitantesBusinessLayer(DatosEnMemoria datos, ResidentesBusinessLayer residentesBusinessLayer) {
-        this.datos = datos;
+    public VisitantesBusinessLayer(IVisitanteRepository visitanteRepository,
+            IAccesoRepository accesoRepository,
+            ResidentesBusinessLayer residentesBusinessLayer) {
+        this.visitanteRepository = visitanteRepository;
+        this.accesoRepository = accesoRepository;
         this.residentesBusinessLayer = residentesBusinessLayer;
     }
 
     public List<VisitanteDto> obtenerTodos() {
-        return datos.getVisitantes().stream()
-                .map(this::completarResidente)
+        return visitanteRepository.findByActivoTrueOrderByIdAsc().stream()
+                .map(Mappers::toDto)
                 .toList();
     }
 
     public VisitanteDto obtenerPorId(int id) {
-        VisitanteDto visitante = datos.getVisitantes().stream()
-                .filter(v -> v.getId() == id)
-                .findFirst()
-                .orElseThrow(() -> new NoEncontradoException("No existe el visitante con id " + id));
-        return completarResidente(visitante);
+        return Mappers.toDto(obtenerEntidad(id));
     }
 
+    /** Lo usa la caseta (AccesosBusinessLayer) para validar que el visitante exista. */
+    public VisitanteEntity obtenerEntidad(int id) {
+        return visitanteRepository.findByIdAndActivoTrue(id)
+                .orElseThrow(() -> new NoEncontradoException("No existe el visitante con id " + id));
+    }
+
+    @Transactional
     public IdDto agregar(VisitanteDtoIn dtoIn) {
         // Solo un residente existente puede autorizar visitas
-        residentesBusinessLayer.obtenerPorId(dtoIn.getResidenteId());
+        ResidenteEntity residente = residentesBusinessLayer.obtenerEntidad(dtoIn.getResidenteId());
 
-        int id = datos.getSiguienteIdVisitante().getAndIncrement();
-        datos.getVisitantes().add(new VisitanteDto(
-                id,
+        VisitanteEntity entity = visitanteRepository.save(new VisitanteEntity(
                 dtoIn.getNombre().trim(),
                 dtoIn.getApellidos().trim(),
                 limpiarPlacas(dtoIn.getPlacas()),
-                dtoIn.getResidenteId(),
-                null,
-                null));
+                residente));
 
-        return new IdDto(id, "Visitante registrado");
+        return new IdDto(entity.getId(), "Visitante registrado");
     }
 
+    @Transactional
     public IdDto actualizar(int id, VisitanteDtoIn dtoIn) {
-        VisitanteDto visitante = obtenerPorId(id);
-        residentesBusinessLayer.obtenerPorId(dtoIn.getResidenteId());
+        VisitanteEntity entity = obtenerEntidad(id);
+        ResidenteEntity residente = residentesBusinessLayer.obtenerEntidad(dtoIn.getResidenteId());
 
-        visitante.setNombre(dtoIn.getNombre().trim());
-        visitante.setApellidos(dtoIn.getApellidos().trim());
-        visitante.setPlacas(limpiarPlacas(dtoIn.getPlacas()));
-        visitante.setResidenteId(dtoIn.getResidenteId());
+        entity.setNombre(dtoIn.getNombre().trim());
+        entity.setApellidos(dtoIn.getApellidos().trim());
+        entity.setPlacas(limpiarPlacas(dtoIn.getPlacas()));
+        entity.setResidente(residente);
+        visitanteRepository.save(entity);
 
         return new IdDto(id, "Visitante actualizado");
     }
 
+    @Transactional
     public IdDto borrar(int id) {
-        VisitanteDto visitante = obtenerPorId(id);
+        VisitanteEntity entity = obtenerEntidad(id);
 
-        boolean estaDentro = datos.getAccesos().stream()
-                .anyMatch(a -> a.getVisitanteId() == id && a.isDentro());
-        if (estaDentro) {
+        if (accesoRepository.existsByVisitante_IdAndFechaSalidaIsNull(id)) {
             throw new ReglaNegocioException(
                     "No se puede borrar al visitante mientras está dentro del condominio; registra primero su salida");
         }
 
-        datos.getVisitantes().remove(visitante);
+        entity.setActivo(false);
+        visitanteRepository.save(entity);
+
         return new IdDto(id, "Visitante borrado");
     }
 
     private String limpiarPlacas(String placas) {
         return placas == null ? "" : placas.trim().toUpperCase();
-    }
-
-    /** Agrega el nombre del residente que autoriza y su vivienda. */
-    private VisitanteDto completarResidente(VisitanteDto visitante) {
-        datos.getResidentes().stream()
-                .filter(r -> r.getId() == visitante.getResidenteId())
-                .findFirst()
-                .ifPresent(residente -> {
-                    visitante.setResidente(residente.getNombre() + " " + residente.getApellidos());
-                    datos.getViviendas().stream()
-                            .filter(v -> v.getId() == residente.getViviendaId())
-                            .findFirst()
-                            .ifPresent(v -> visitante.setVivienda(v.getEtiqueta()));
-                });
-        return visitante;
     }
 }

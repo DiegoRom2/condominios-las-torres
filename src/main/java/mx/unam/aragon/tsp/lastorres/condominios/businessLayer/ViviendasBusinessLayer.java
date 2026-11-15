@@ -3,13 +3,17 @@ package mx.unam.aragon.tsp.lastorres.condominios.businessLayer;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import mx.unam.aragon.tsp.lastorres.condominios.dtos.IdDto;
 import mx.unam.aragon.tsp.lastorres.condominios.dtos.ViviendaDto;
 import mx.unam.aragon.tsp.lastorres.condominios.dtos.ViviendaDtoIn;
+import mx.unam.aragon.tsp.lastorres.condominios.entities.ViviendaEntity;
 import mx.unam.aragon.tsp.lastorres.condominios.exceptions.NoEncontradoException;
 import mx.unam.aragon.tsp.lastorres.condominios.exceptions.ReglaNegocioException;
-import mx.unam.aragon.tsp.lastorres.condominios.helpers.DatosEnMemoria;
+import mx.unam.aragon.tsp.lastorres.condominios.helpers.Mappers;
+import mx.unam.aragon.tsp.lastorres.condominios.repositories.IResidenteRepository;
+import mx.unam.aragon.tsp.lastorres.condominios.repositories.IViviendaRepository;
 
 /**
  * Reglas de negocio de las viviendas (departamentos) de Las Torres.
@@ -17,68 +21,75 @@ import mx.unam.aragon.tsp.lastorres.condominios.helpers.DatosEnMemoria;
 @Service
 public class ViviendasBusinessLayer {
 
-    private final DatosEnMemoria datos;
+    private final IViviendaRepository viviendaRepository;
+    private final IResidenteRepository residenteRepository;
 
-    public ViviendasBusinessLayer(DatosEnMemoria datos) {
-        this.datos = datos;
+    public ViviendasBusinessLayer(IViviendaRepository viviendaRepository, IResidenteRepository residenteRepository) {
+        this.viviendaRepository = viviendaRepository;
+        this.residenteRepository = residenteRepository;
     }
 
     public List<ViviendaDto> obtenerTodas() {
-        return datos.getViviendas();
+        return viviendaRepository.findByActivoTrueOrderByIdAsc().stream()
+                .map(Mappers::toDto)
+                .toList();
     }
 
     public ViviendaDto obtenerPorId(int id) {
-        return datos.getViviendas().stream()
-                .filter(v -> v.getId() == id)
-                .findFirst()
+        return Mappers.toDto(obtenerEntidad(id));
+    }
+
+    /** Lo usan otros business layers para validar que la vivienda exista. */
+    public ViviendaEntity obtenerEntidad(int id) {
+        return viviendaRepository.findByIdAndActivoTrue(id)
                 .orElseThrow(() -> new NoEncontradoException("No existe la vivienda con id " + id));
     }
 
+    @Transactional
     public IdDto agregar(ViviendaDtoIn dtoIn) {
         String torre = dtoIn.getTorre().trim().toUpperCase();
         String numero = dtoIn.getNumero().trim();
         validarQueNoExista(torre, numero, 0);
 
-        int id = datos.getSiguienteIdVivienda().getAndIncrement();
-        datos.getViviendas().add(new ViviendaDto(id, torre, numero, dtoIn.getPiso()));
+        ViviendaEntity entity = viviendaRepository.save(new ViviendaEntity(torre, numero, dtoIn.getPiso()));
 
-        return new IdDto(id, "Vivienda registrada");
+        return new IdDto(entity.getId(), "Vivienda registrada");
     }
 
+    @Transactional
     public IdDto actualizar(int id, ViviendaDtoIn dtoIn) {
-        ViviendaDto vivienda = obtenerPorId(id);
+        ViviendaEntity entity = obtenerEntidad(id);
         String torre = dtoIn.getTorre().trim().toUpperCase();
         String numero = dtoIn.getNumero().trim();
         validarQueNoExista(torre, numero, id);
 
-        vivienda.setTorre(torre);
-        vivienda.setNumero(numero);
-        vivienda.setPiso(dtoIn.getPiso());
+        entity.setTorre(torre);
+        entity.setNumero(numero);
+        entity.setPiso(dtoIn.getPiso());
+        viviendaRepository.save(entity);
 
         return new IdDto(id, "Vivienda actualizada");
     }
 
+    @Transactional
     public IdDto borrar(int id) {
-        ViviendaDto vivienda = obtenerPorId(id);
+        ViviendaEntity entity = obtenerEntidad(id);
 
-        boolean tieneResidentes = datos.getResidentes().stream()
-                .anyMatch(r -> r.getViviendaId() == id);
-        if (tieneResidentes) {
+        if (residenteRepository.existsByVivienda_IdAndActivoTrue(id)) {
             throw new ReglaNegocioException(
-                    "No se puede borrar " + vivienda.getEtiqueta() + " porque tiene residentes registrados");
+                    "No se puede borrar " + Mappers.etiqueta(entity) + " porque tiene residentes registrados");
         }
 
-        datos.getViviendas().remove(vivienda);
+        // Borrado lógico: se desactiva en lugar de eliminar el registro
+        entity.setActivo(false);
+        viviendaRepository.save(entity);
+
         return new IdDto(id, "Vivienda borrada");
     }
 
     /** No puede haber dos departamentos con la misma torre y número. */
     private void validarQueNoExista(String torre, String numero, int idActual) {
-        boolean duplicada = datos.getViviendas().stream()
-                .anyMatch(v -> v.getId() != idActual
-                        && v.getTorre().equalsIgnoreCase(torre)
-                        && v.getNumero().equalsIgnoreCase(numero));
-        if (duplicada) {
+        if (viviendaRepository.existsByTorreIgnoreCaseAndNumeroIgnoreCaseAndActivoTrueAndIdNot(torre, numero, idActual)) {
             throw new ReglaNegocioException("Ya existe la vivienda Torre " + torre + " - " + numero);
         }
     }
