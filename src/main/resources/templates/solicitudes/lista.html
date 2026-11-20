@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragmentos :: cabeza('Solicitudes')}"></head>
+<body>
+<header th:replace="~{fragmentos :: barra}"></header>
+<main class="contenedor">
+    <div class="encabezado">
+        <h1>Solicitudes de cuenta</h1>
+    </div>
+    <div th:replace="~{fragmentos :: avisos}"></div>
+
+    <section class="tarjeta">
+        <h2>Por revisar</h2>
+        <p class="vacio" th:if="${#lists.isEmpty(pendientes)}">No hay solicitudes pendientes.</p>
+        <div class="tabla-scroll" th:unless="${#lists.isEmpty(pendientes)}">
+            <table>
+                <thead>
+                <tr><th>Nombre</th><th>Vivienda</th><th>Usuario</th><th>Enviada</th><th></th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="s : ${pendientes}">
+                    <td th:text="${s.nombre + ' ' + s.apellidos}"></td>
+                    <td th:text="${s.vivienda}"></td>
+                    <td th:text="${s.usuario}"></td>
+                    <td th:text="${#temporals.format(s.fechaSolicitud, 'dd/MM/yyyy HH:mm')}"></td>
+                    <td><a class="boton boton-chico" th:href="@{/solicitudes/{id}(id=${s.id})}">Revisar</a></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="tarjeta">
+        <h2>Historial</h2>
+        <p class="vacio" th:if="${#lists.isEmpty(revisadas)}">Todavía no se ha revisado ninguna solicitud.</p>
+        <div class="tabla-scroll" th:unless="${#lists.isEmpty(revisadas)}">
+            <table>
+                <thead>
+                <tr><th>Nombre</th><th>Vivienda</th><th>Estado</th><th>Revisada</th><th>Por</th><th></th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="s : ${revisadas}">
+                    <td th:text="${s.nombre + ' ' + s.apellidos}"></td>
+                    <td th:text="${s.vivienda}"></td>
+                    <td>
+                        <span class="pastilla pastilla-aprobada" th:if="${s.estado == 'APROBADA'}">Aprobada</span>
+                        <span class="pastilla pastilla-rechazada" th:if="${s.estado == 'RECHAZADA'}">Rechazada</span>
+                    </td>
+                    <td th:text="${s.fechaRevision != null} ? ${#temporals.format(s.fechaRevision, 'dd/MM/yyyy HH:mm')} : '—'"></td>
+                    <td th:text="${s.revisadoPor}"></td>
+                    <td><a class="boton boton-chico boton-secundario" th:href="@{/solicitudes/{id}(id=${s.id})}">Ver</a></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

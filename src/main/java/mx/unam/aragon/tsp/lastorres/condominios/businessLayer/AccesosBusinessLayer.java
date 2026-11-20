@@ -49,6 +49,13 @@ public class AccesosBusinessLayer {
                 .toList();
     }
 
+    /** Accesos de los visitantes de un residente (pantalla "Mis visitas"). */
+    public List<AccesoDto> obtenerDeResidente(int residenteId) {
+        return accesoRepository.findByVisitante_Residente_IdOrderByFechaEntradaDesc(residenteId).stream()
+                .map(Mappers::toDto)
+                .toList();
+    }
+
     public AccesoDto obtenerPorId(int id) {
         return Mappers.toDto(obtenerEntidad(id));
     }

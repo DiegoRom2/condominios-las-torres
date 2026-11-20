@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragmentos :: cabeza('Solicitud')}"></head>
+<body>
+<header th:replace="~{fragmentos :: barra}"></header>
+<main class="contenedor">
+    <div class="encabezado">
+        <h1 th:text="${'Solicitud de ' + solicitud.nombre + ' ' + solicitud.apellidos}">Solicitud</h1>
+        <a class="boton boton-secundario" th:href="@{/solicitudes}">Volver</a>
+    </div>
+    <div th:replace="~{fragmentos :: avisos}"></div>
+
+    <section class="tarjeta">
+        <dl class="detalle">
+            <dt>Estado</dt>
+            <dd>
+                <span class="pastilla pastilla-pendiente" th:if="${solicitud.pendiente}">Pendiente</span>
+                <span class="pastilla pastilla-aprobada" th:if="${solicitud.estado == 'APROBADA'}">Aprobada</span>
+                <span class="pastilla pastilla-rechazada" th:if="${solicitud.estado == 'RECHAZADA'}">Rechazada</span>
+            </dd>
+            <dt>Vivienda</dt><dd th:text="${solicitud.vivienda}"></dd>
+            <dt>Correo</dt><dd th:text="${solicitud.correo}"></dd>
+            <dt>Teléfono</dt><dd th:text="${solicitud.telefono}"></dd>
+            <dt>Usuario</dt><dd th:text="${solicitud.usuario}"></dd>
+            <dt>Enviada</dt><dd th:text="${#temporals.format(solicitud.fechaSolicitud, 'dd/MM/yyyy HH:mm')}"></dd>
+            <dt>Comprobante</dt>
+            <dd>
+                <a th:href="@{/solicitudes/{id}/comprobante(id=${solicitud.id})}" target="_blank" rel="noopener"
+                   th:text="${solicitud.comprobanteNombre}">archivo</a>
+                <span class="nota">(se abre en otra pestaña)</span>
+            </dd>
+            <th:block th:unless="${solicitud.pendiente}">
+                <dt>Revisada</dt>
+                <dd th:text="${#temporals.format(solicitud.fechaRevision, 'dd/MM/yyyy HH:mm') + ' por ' + solicitud.revisadoPor}"></dd>
+            </th:block>
+            <th:block th:if="${solicitud.motivoRechazo}">
+                <dt>Motivo del rechazo</dt><dd th:text="${solicitud.motivoRechazo}"></dd>
+            </th:block>
+        </dl>
+    </section>
+
+    <th:block th:if="${solicitud.pendiente}">
+        <div class="aviso aviso-info" th:if="${solicitud.residenteExistente}">
+            Ya hay un residente registrado con este correo:
+            <strong th:text="${solicitud.residenteExistente}"></strong>.
+            Si apruebas, la cuenta se ligará a ese registro.
+        </div>
+
+        <div class="decision">
+            <section class="tarjeta">
+                <h2>Aprobar</h2>
+                <p class="suave">Revisa el comprobante antes de aprobar. Se creará la cuenta de residente y se le avisará por correo.</p>
+                <form th:action="@{/solicitudes/{id}/aprobar(id=${solicitud.id})}" method="post"
+                      onsubmit="return confirm('¿Aprobar esta solicitud y crear la cuenta?')">
+                    <button class="boton" type="submit">Aprobar solicitud</button>
+                </form>
+            </section>
+
+            <section class="tarjeta">
+                <h2>Rechazar</h2>
+                <form th:action="@{/solicitudes/{id}/rechazar(id=${solicitud.id})}" th:object="${rechazo}" method="post">
+                    <div class="campo">
+                        <label for="motivo">Motivo (se le enviará por correo)</label>
+                        <textarea id="motivo" th:field="*{motivo}" maxlength="200"
+                                  placeholder="Ej. El comprobante no está a tu nombre"></textarea>
+                        <p class="error-campo" th:errors="*{motivo}"></p>
+                    </div>
+                    <button class="boton boton-peligro" type="submit">Rechazar solicitud</button>
+                </form>
+            </section>
+        </div>
+    </th:block>
+</main>
+</body>
+</html>

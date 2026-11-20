@@ -1,5 +1,6 @@
 package mx.unam.aragon.tsp.lastorres.condominios.webController;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,7 +37,11 @@ public class InicioWebController {
     }
 
     @GetMapping("/")
-    public String inicio(Model model) {
+    public String inicio(Authentication autenticacion, Model model) {
+        // El residente no ve el resumen del condominio, solo lo suyo
+        if (WebAdvice.tieneRol(autenticacion, "RESIDENTE")) {
+            return "redirect:/mis-visitantes";
+        }
         model.addAttribute("totalViviendas", viviendasBusinessLayer.obtenerTodas().size());
         model.addAttribute("totalResidentes", residentesBusinessLayer.obtenerTodos().size());
         model.addAttribute("totalVisitantes", visitantesBusinessLayer.obtenerTodos().size());

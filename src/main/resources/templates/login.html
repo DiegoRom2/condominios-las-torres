@@ -9,6 +9,15 @@
 
         <div class="aviso aviso-error" th:if="${param.error}">Usuario o contraseña incorrectos.</div>
         <div class="aviso aviso-exito" th:if="${param.salir}">Cerraste sesión correctamente.</div>
+        <div class="aviso aviso-exito" th:if="${param.registrado}">
+            Recibimos tu solicitud. La administración revisará tu comprobante y te avisará por correo.
+        </div>
+        <div class="aviso aviso-info" th:if="${param.pendiente}">
+            Tu cuenta sigue en revisión. Te avisaremos por correo cuando la administración la apruebe.
+        </div>
+        <div class="aviso aviso-error" th:if="${param.rechazada}">
+            Tu solicitud fue rechazada. Revisa tu correo para ver el motivo, o envía una nueva solicitud.
+        </div>
 
         <form th:action="@{/login}" method="post">
             <div class="campo">
@@ -21,6 +30,9 @@
             </div>
             <button class="boton" type="submit">Entrar</button>
         </form>
+        <hr class="separador">
+        <p class="suave" style="margin:0">¿Vives en Las Torres y no tienes cuenta?<br>
+            <a th:href="@{/registro}">Solicita tu cuenta de residente</a></p>
     </div>
 </main>
 </body>

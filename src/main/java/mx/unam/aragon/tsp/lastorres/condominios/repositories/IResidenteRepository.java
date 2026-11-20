@@ -16,6 +16,9 @@ public interface IResidenteRepository extends JpaRepository<ResidenteEntity, Int
     /** ¿Ya hay otro residente activo con ese correo? */
     boolean existsByCorreoIgnoreCaseAndActivoTrueAndIdNot(String correo, Integer id);
 
+    /** Residente activo con ese correo, si existe. */
+    Optional<ResidenteEntity> findFirstByCorreoIgnoreCaseAndActivoTrue(String correo);
+
     /** ¿La vivienda tiene residentes activos? */
     boolean existsByVivienda_IdAndActivoTrue(Integer viviendaId);
 }

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragmentos :: cabeza('Mis visitas')}"></head>
+<body>
+<header th:replace="~{fragmentos :: barra}"></header>
+<main class="contenedor">
+    <div class="encabezado">
+        <h1>Mis visitas</h1>
+    </div>
+    <p class="suave">Entradas y salidas de las personas que autorizaste.</p>
+
+    <section class="tarjeta">
+        <p class="vacio" th:if="${#lists.isEmpty(accesos)}">Todavía no has recibido visitas.</p>
+        <div class="tabla-scroll" th:unless="${#lists.isEmpty(accesos)}">
+            <table>
+                <thead>
+                <tr><th>Visitante</th><th>Motivo</th><th>Entrada</th><th>Salida</th><th>Estado</th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="a : ${accesos}">
+                    <td th:text="${a.visitante}"></td>
+                    <td th:text="${a.motivo}"></td>
+                    <td th:text="${#temporals.format(a.fechaEntrada, 'dd/MM/yyyy HH:mm')}"></td>
+                    <td th:text="${a.fechaSalida != null} ? ${#temporals.format(a.fechaSalida, 'dd/MM/yyyy HH:mm')} : '—'"></td>
+                    <td>
+                        <span class="pastilla pastilla-dentro" th:if="${a.dentro}">Dentro</span>
+                        <span class="pastilla pastilla-salio" th:unless="${a.dentro}">Salió</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

@@ -13,6 +13,9 @@ public interface IVisitanteRepository extends JpaRepository<VisitanteEntity, Int
 
     Optional<VisitanteEntity> findByIdAndActivoTrue(Integer id);
 
+    /** Visitantes autorizados por un residente. */
+    List<VisitanteEntity> findByResidente_IdAndActivoTrueOrderByIdAsc(Integer residenteId);
+
     /** ¿El residente tiene visitantes activos autorizados? */
     boolean existsByResidente_IdAndActivoTrue(Integer residenteId);
 }

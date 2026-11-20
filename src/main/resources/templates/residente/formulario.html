@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragmentos :: cabeza(${titulo})}"></head>
+<body>
+<header th:replace="~{fragmentos :: barra}"></header>
+<main class="contenedor">
+    <div class="encabezado"><h1 th:text="${titulo}">Visitante</h1></div>
+    <div th:replace="~{fragmentos :: avisos}"></div>
+
+    <section class="tarjeta formulario">
+        <form th:action="@{${accion}}" th:object="${visitante}" method="post">
+            <div class="campo">
+                <label for="nombre">Nombre</label>
+                <input id="nombre" type="text" th:field="*{nombre}" maxlength="60">
+                <p class="error-campo" th:errors="*{nombre}"></p>
+            </div>
+            <div class="campo">
+                <label for="apellidos">Apellidos</label>
+                <input id="apellidos" type="text" th:field="*{apellidos}" maxlength="80">
+                <p class="error-campo" th:errors="*{apellidos}"></p>
+            </div>
+            <div class="campo">
+                <label for="placas">Placas del vehículo (opcional)</label>
+                <input id="placas" type="text" th:field="*{placas}" maxlength="10" placeholder="Ej. ABC1234">
+                <p class="error-campo" th:errors="*{placas}"></p>
+            </div>
+            <div class="botones">
+                <button class="boton" type="submit">Guardar</button>
+                <a class="boton boton-secundario" th:href="@{/mis-visitantes}">Cancelar</a>
+            </div>
+        </form>
+    </section>
+</main>
+</body>
+</html>

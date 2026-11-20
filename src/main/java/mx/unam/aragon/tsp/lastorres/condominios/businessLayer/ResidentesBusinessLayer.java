@@ -14,6 +14,7 @@ import mx.unam.aragon.tsp.lastorres.condominios.exceptions.NoEncontradoException
 import mx.unam.aragon.tsp.lastorres.condominios.exceptions.ReglaNegocioException;
 import mx.unam.aragon.tsp.lastorres.condominios.helpers.Mappers;
 import mx.unam.aragon.tsp.lastorres.condominios.repositories.IResidenteRepository;
+import mx.unam.aragon.tsp.lastorres.condominios.repositories.IUsuarioRepository;
 import mx.unam.aragon.tsp.lastorres.condominios.repositories.IVisitanteRepository;
 
 /**
@@ -25,13 +26,16 @@ public class ResidentesBusinessLayer {
     private final IResidenteRepository residenteRepository;
     private final IVisitanteRepository visitanteRepository;
     private final ViviendasBusinessLayer viviendasBusinessLayer;
+    private final IUsuarioRepository usuarioRepository;
 
     public ResidentesBusinessLayer(IResidenteRepository residenteRepository,
             IVisitanteRepository visitanteRepository,
-            ViviendasBusinessLayer viviendasBusinessLayer) {
+            ViviendasBusinessLayer viviendasBusinessLayer,
+            IUsuarioRepository usuarioRepository) {
         this.residenteRepository = residenteRepository;
         this.visitanteRepository = visitanteRepository;
         this.viviendasBusinessLayer = viviendasBusinessLayer;
+        this.usuarioRepository = usuarioRepository;
     }
 
     public List<ResidenteDto> obtenerTodos() {
@@ -95,6 +99,12 @@ public class ResidentesBusinessLayer {
 
         entity.setActivo(false);
         residenteRepository.save(entity);
+
+        // Si ya no vive aquí, su cuenta tampoco debe seguir funcionando
+        usuarioRepository.findByResidente_IdAndActivoTrue(id).forEach(usuario -> {
+            usuario.setActivo(false);
+            usuarioRepository.save(usuario);
+        });
 
         return new IdDto(id, "Residente borrado");
     }

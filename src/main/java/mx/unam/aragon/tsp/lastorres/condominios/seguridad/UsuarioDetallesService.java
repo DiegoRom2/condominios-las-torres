@@ -23,8 +23,16 @@ public class UsuarioDetallesService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String usuario) throws UsernameNotFoundException {
-        UsuarioEntity entity = usuarioRepository.findByUsuarioAndActivoTrue(usuario)
+        // Los nombres de usuario se guardan en minúsculas: "Laura" y "laura" son la misma cuenta
+        String nombre = usuario == null ? "" : usuario.trim().toLowerCase();
+
+        UsuarioEntity entity = usuarioRepository.findByUsuarioAndActivoTrue(nombre)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario o contraseña incorrectos"));
+
+        // Una cuenta de residente deja de servir si la administración borró al residente
+        if (entity.getResidente() != null && !entity.getResidente().isActivo()) {
+            throw new UsernameNotFoundException("Usuario o contraseña incorrectos");
+        }
 
         return User.withUsername(entity.getUsuario())
                 .password(entity.getContrasena())

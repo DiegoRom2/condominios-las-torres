@@ -16,8 +16,12 @@ import jakarta.servlet.http.HttpServletResponse;
  * Reglas de seguridad: quién puede entrar a qué.
  *
  * Roles:
- *  - ADMIN:   todo (viviendas, residentes, visitantes, caseta, Swagger).
- *  - GUARDIA: solo la caseta (entradas, salidas, bitácora) y consultas de la API.
+ *  - ADMIN:     todo (viviendas, residentes, visitantes, solicitudes, caseta, Swagger).
+ *  - GUARDIA:   solo la caseta (entradas, salidas, bitácora) y consultas de la API.
+ *  - RESIDENTE: solo sus propios visitantes y sus visitas.
+ *
+ * El registro de residentes (/registro) es público; las cuentas quedan en revisión
+ * hasta que la administración las aprueba.
  *
  * Las pantallas usan el formulario de login; la API (/api/**) acepta además
  * usuario y contraseña por HTTP Basic, para Postman y K6.
@@ -26,22 +30,28 @@ import jakarta.servlet.http.HttpServletResponse;
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, LoginFallidoHandler loginFallido) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/css/**", "/error").permitAll()
+                        .requestMatchers("/login", "/registro", "/css/**", "/error").permitAll()
                         // API: la caseta la usan ambos roles; consultar, también; modificar, solo ADMIN
                         .requestMatchers("/api/v1/accesos/**").hasAnyRole("ADMIN", "GUARDIA")
                         .requestMatchers(HttpMethod.GET, "/api/**").hasAnyRole("ADMIN", "GUARDIA")
                         .requestMatchers("/api/**").hasRole("ADMIN")
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").hasRole("ADMIN")
                         // Pantallas de administración
-                        .requestMatchers("/viviendas/**", "/residentes/**", "/visitantes/**").hasRole("ADMIN")
-                        // Lo demás (inicio, caseta, bitácora) pide haber iniciado sesión
+                        .requestMatchers("/viviendas/**", "/residentes/**", "/visitantes/**", "/solicitudes/**")
+                        .hasRole("ADMIN")
+                        // Caseta de vigilancia
+                        .requestMatchers("/caseta/**", "/bitacora/**").hasAnyRole("ADMIN", "GUARDIA")
+                        // Pantallas del residente
+                        .requestMatchers("/mis-visitantes/**", "/mis-visitas/**").hasRole("RESIDENTE")
+                        // Lo demás (la página de inicio) pide haber iniciado sesión
                         .anyRequest().authenticated())
                 .formLogin(form -> form
                         .loginPage("/login")
                         .defaultSuccessUrl("/", true)
+                        .failureHandler(loginFallido)
                         .permitAll())
                 .httpBasic(Customizer.withDefaults())
                 .logout(logout -> logout

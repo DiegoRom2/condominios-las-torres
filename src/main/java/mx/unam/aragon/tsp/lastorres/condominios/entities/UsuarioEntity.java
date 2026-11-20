@@ -5,6 +5,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -35,12 +37,17 @@ public class UsuarioEntity {
     @Column(nullable = false, length = 80)
     private String nombre;
 
-    /** ADMIN o GUARDIA. */
+    /** ADMIN, GUARDIA o RESIDENTE. */
     @Column(nullable = false, length = 20)
     private String rol;
 
     @Column(nullable = false)
     private boolean activo = true;
+
+    /** Solo en cuentas con rol RESIDENTE: a qué residente pertenece la cuenta. */
+    @ManyToOne
+    @JoinColumn(name = "residente_id")
+    private ResidenteEntity residente;
 
     public UsuarioEntity(String usuario, String contrasena, String nombre, String rol) {
         this.usuario = usuario;

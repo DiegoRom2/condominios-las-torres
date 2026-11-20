@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragmentos :: cabeza('Solicitar cuenta')}"></head>
+<body>
+<main class="centrado">
+    <div class="caja-registro tarjeta">
+        <h1>Solicitar cuenta de residente</h1>
+        <p class="suave">La administración revisará tu comprobante de domicilio antes de activar tu cuenta.</p>
+
+        <div class="aviso aviso-error" th:if="${error}" th:text="${error}"></div>
+
+        <form th:action="@{/registro}" th:object="${registro}" method="post" enctype="multipart/form-data">
+            <div class="fila">
+                <div class="campo">
+                    <label for="nombre">Nombre</label>
+                    <input id="nombre" type="text" th:field="*{nombre}" maxlength="60">
+                    <p class="error-campo" th:errors="*{nombre}"></p>
+                </div>
+                <div class="campo">
+                    <label for="apellidos">Apellidos</label>
+                    <input id="apellidos" type="text" th:field="*{apellidos}" maxlength="80">
+                    <p class="error-campo" th:errors="*{apellidos}"></p>
+                </div>
+            </div>
+            <div class="fila">
+                <div class="campo">
+                    <label for="correo">Correo</label>
+                    <input id="correo" type="email" th:field="*{correo}" maxlength="120" placeholder="nombre@ejemplo.com">
+                    <p class="error-campo" th:errors="*{correo}"></p>
+                </div>
+                <div class="campo">
+                    <label for="telefono">Teléfono (10 dígitos)</label>
+                    <input id="telefono" type="tel" th:field="*{telefono}" maxlength="10" placeholder="5512345678">
+                    <p class="error-campo" th:errors="*{telefono}"></p>
+                </div>
+            </div>
+            <div class="campo">
+                <label for="viviendaId">Vivienda donde vives</label>
+                <select id="viviendaId" th:field="*{viviendaId}">
+                    <option value="">Selecciona tu vivienda…</option>
+                    <option th:each="v : ${viviendas}" th:value="${v.id}" th:text="${v.etiqueta}"></option>
+                </select>
+                <p class="error-campo" th:errors="*{viviendaId}"></p>
+            </div>
+
+            <hr class="separador">
+
+            <div class="campo">
+                <label for="usuario">Usuario para iniciar sesión</label>
+                <input id="usuario" type="text" th:field="*{usuario}" maxlength="40" autocomplete="username"
+                       placeholder="Ej. laura.hernandez">
+                <p class="error-campo" th:errors="*{usuario}"></p>
+            </div>
+            <div class="fila">
+                <div class="campo">
+                    <label for="contrasena">Contraseña</label>
+                    <!-- Las contraseñas nunca se vuelven a mostrar en la página -->
+                    <input id="contrasena" name="contrasena" type="password" maxlength="64" autocomplete="new-password">
+                    <p class="error-campo" th:errors="*{contrasena}"></p>
+                </div>
+                <div class="campo">
+                    <label for="confirmarContrasena">Confirma la contraseña</label>
+                    <input id="confirmarContrasena" name="confirmarContrasena" type="password" maxlength="64"
+                           autocomplete="new-password">
+                    <p class="error-campo" th:errors="*{confirmarContrasena}"></p>
+                </div>
+            </div>
+            <p class="nota" style="margin-top:-8px">Mínimo 8 caracteres.</p>
+
+            <hr class="separador">
+
+            <div class="campo">
+                <label for="comprobante">Comprobante de domicilio</label>
+                <input id="comprobante" name="comprobante" type="file" required
+                       accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png">
+                <p class="nota">Contrato de arrendamiento, escritura o recibo a tu nombre. PDF, JPG o PNG de hasta 2 MB.</p>
+                <p class="error-campo" id="errorArchivo"></p>
+                <p class="nota" th:if="${error != null or #fields.hasAnyErrors()}">
+                    Por seguridad, vuelve a adjuntar el archivo.
+                </p>
+            </div>
+
+            <div class="botones">
+                <button class="boton" type="submit">Enviar solicitud</button>
+                <a class="boton boton-secundario" th:href="@{/login}">Ya tengo cuenta</a>
+            </div>
+        </form>
+    </div>
+</main>
+<script>
+    // Revisa el tamaño antes de enviar, para no subir archivos enormes.
+    // El servidor vuelve a revisar tamaño y tipo: esto solo es para avisar más rápido.
+    document.getElementById('comprobante').addEventListener('change', function () {
+        const aviso = document.getElementById('errorArchivo');
+        aviso.textContent = '';
+        if (this.files[0] && this.files[0].size > 2 * 1024 * 1024) {
+            aviso.textContent = 'El comprobante no puede pesar más de 2 MB.';
+            this.value = '';
+        }
+    });
+</script>
+</body>
+</html>

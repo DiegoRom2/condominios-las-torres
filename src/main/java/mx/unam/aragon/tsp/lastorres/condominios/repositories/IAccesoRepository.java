@@ -14,6 +14,9 @@ public interface IAccesoRepository extends JpaRepository<AccesoEntity, Integer> 
     /** Accesos sin salida registrada: quién está dentro ahora. */
     List<AccesoEntity> findByFechaSalidaIsNullOrderByFechaEntradaDesc();
 
+    /** Accesos de los visitantes de un residente, del más reciente al más antiguo. */
+    List<AccesoEntity> findByVisitante_Residente_IdOrderByFechaEntradaDesc(Integer residenteId);
+
     /** ¿El visitante está dentro del condominio? */
     boolean existsByVisitante_IdAndFechaSalidaIsNull(Integer visitanteId);
 }

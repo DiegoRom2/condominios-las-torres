@@ -15,15 +15,23 @@
 <header class="barra" th:fragment="barra">
     <a class="marca" th:href="@{/}">Las <span>Torres</span></a>
     <nav class="menu">
-        <a th:href="@{/caseta}">Caseta</a>
-        <a th:href="@{/bitacora}">Bitácora</a>
+        <th:block th:unless="${esResidente}">
+            <a th:href="@{/caseta}">Caseta</a>
+            <a th:href="@{/bitacora}">Bitácora</a>
+        </th:block>
+        <a th:if="${esAdmin}" th:href="@{/solicitudes}">Solicitudes<span class="insignia"
+                th:if="${solicitudesPendientes > 0}" th:text="${solicitudesPendientes}">0</span></a>
         <a th:if="${esAdmin}" th:href="@{/visitantes}">Visitantes</a>
         <a th:if="${esAdmin}" th:href="@{/residentes}">Residentes</a>
         <a th:if="${esAdmin}" th:href="@{/viviendas}">Viviendas</a>
+        <th:block th:if="${esResidente}">
+            <a th:href="@{/mis-visitantes}">Mis visitantes</a>
+            <a th:href="@{/mis-visitas}">Mis visitas</a>
+        </th:block>
     </nav>
     <div class="sesion">
         <span th:text="${usuarioActual}">usuario</span>
-        <span class="etiqueta-rol" th:text="${esAdmin} ? 'Administrador' : 'Guardia'">Rol</span>
+        <span class="etiqueta-rol" th:text="${rolActual}">Rol</span>
         <form th:action="@{/logout}" method="post">
             <button class="boton boton-chico boton-claro" type="submit">Salir</button>
         </form>

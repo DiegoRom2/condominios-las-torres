@@ -44,6 +44,25 @@ public class VisitantesBusinessLayer {
         return Mappers.toDto(obtenerEntidad(id));
     }
 
+    /** Visitantes que autorizó un residente (pantalla "Mis visitantes"). */
+    public List<VisitanteDto> obtenerDeResidente(int residenteId) {
+        return visitanteRepository.findByResidente_IdAndActivoTrueOrderByIdAsc(residenteId).stream()
+                .map(Mappers::toDto)
+                .toList();
+    }
+
+    /**
+     * Un visitante solo si lo autorizó ese residente. Si es de otro, responde
+     * "no existe" (404): así nadie puede ver o cambiar visitantes ajenos cambiando el número en la URL.
+     */
+    public VisitanteDto obtenerPropio(int id, int residenteId) {
+        VisitanteEntity entity = obtenerEntidad(id);
+        if (entity.getResidente().getId() != residenteId) {
+            throw new NoEncontradoException("No existe el visitante con id " + id);
+        }
+        return Mappers.toDto(entity);
+    }
+
     /** Lo usa la caseta (AccesosBusinessLayer) para validar que el visitante exista. */
     public VisitanteEntity obtenerEntidad(int id) {
         return visitanteRepository.findByIdAndActivoTrue(id)
