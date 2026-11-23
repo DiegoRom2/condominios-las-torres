@@ -42,6 +42,10 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	runtimeOnly 'org.postgresql:postgresql'
 
+	// Exportación de reportes en PDF y Excel (ligeras para el límite de 512 MB en Render)
+	implementation 'com.github.librepdf:openpdf:2.0.3'
+	implementation 'org.dhatim:fastexcel:0.18.4'
+
 	// Base de datos en memoria solo para las pruebas automáticas (no toca Neon)
 	testRuntimeOnly 'com.h2database:h2'
 }
