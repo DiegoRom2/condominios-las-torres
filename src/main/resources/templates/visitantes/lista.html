@@ -6,7 +6,11 @@
 <main class="contenedor">
     <div class="encabezado">
         <h1>Visitantes autorizados</h1>
-        <a class="boton" th:href="@{/visitantes/nuevo}">Nuevo visitante</a>
+        <div class="acciones">
+            <a class="boton boton-secundario" th:href="@{/api/v1/reportes/visitantes/pdf}">Exportar PDF</a>
+            <a class="boton boton-secundario" th:href="@{/api/v1/reportes/visitantes/excel}">Exportar Excel</a>
+            <a class="boton" th:href="@{/visitantes/nuevo}">Nuevo visitante</a>
+        </div>
     </div>
     <div th:replace="~{fragmentos :: avisos}"></div>
 

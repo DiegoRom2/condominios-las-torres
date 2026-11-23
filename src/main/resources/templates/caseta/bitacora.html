@@ -6,7 +6,11 @@
 <main class="contenedor">
     <div class="encabezado">
         <h1>Bitácora de accesos</h1>
-        <a class="boton boton-secundario" th:href="@{/caseta}">Volver a la caseta</a>
+        <div class="acciones">
+            <a class="boton" th:href="@{/api/v1/reportes/bitacora/pdf}">Exportar PDF</a>
+            <a class="boton boton-secundario" th:href="@{/api/v1/reportes/bitacora/excel}">Exportar Excel</a>
+            <a class="boton boton-secundario" th:href="@{/caseta}">Volver a la caseta</a>
+        </div>
     </div>
 
     <section class="tarjeta">
