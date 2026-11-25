@@ -18,10 +18,10 @@ winget install k6 --source winget
 
 ### 1. Contra Render (valores por defecto)
 
-Por defecto `load-test.js` apunta a `https://condominios-las-torres.onrender.com` con HTTP Basic (`admin` / `Diego2026`):
+Por defecto `load-test.js` apunta a `https://condominios-las-torres.onrender.com` con HTTP Basic (usuario `admin` por defecto). La contraseña **no** está en el código: hay que pasarla al ejecutar con `-e K6_PASSWORD=...`:
 
 ```bash
-k6 run k6-tests/load-test.js
+k6 run -e K6_PASSWORD=tu_contrasena k6-tests/load-test.js
 ```
 
 > **Nota sobre Render (plan gratuito):** El servicio puede tardar ~1 minuto en despertar tras inactividad. El script incluye una fase `setup()` con timeout de 90 s para despertar la instancia antes de medir las etapas de carga.
@@ -41,7 +41,7 @@ k6 run \
 ### 3. Prueba rápida de humo (1 usuario virtual, 1 iteración)
 
 ```bash
-k6 run --vus 1 --iterations 1 k6-tests/load-test.js
+k6 run --vus 1 --iterations 1 -e K6_PASSWORD=tu_contrasena k6-tests/load-test.js
 ```
 
 ## Endpoints evaluados

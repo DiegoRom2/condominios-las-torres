@@ -31,6 +31,9 @@ import mx.unam.aragon.tsp.lastorres.condominios.repositories.IViviendaRepository
  * Sus contraseñas se leen de las variables de entorno ADMIN_PASSWORD y
  * GUARDIA_PASSWORD; si no están definidas, se genera una al azar y se
  * muestra una sola vez en el log de arranque.
+ *
+ * Si los usuarios ya existen y esas variables cambian, al arrancar se actualiza
+ * su contraseña: así se cambia sin tocar la base de datos.
  */
 @Component
 public class DatosIniciales implements CommandLineRunner {
@@ -69,11 +72,30 @@ public class DatosIniciales implements CommandLineRunner {
     }
 
     private void crearUsuarios() {
-        if (usuarioRepository.count() > 0) {
+        if (usuarioRepository.count() == 0) {
+            crearUsuario("admin", contrasenaAdmin, "Administración Las Torres", "ADMIN");
+            crearUsuario("guardia", contrasenaGuardia, "Caseta de vigilancia", "GUARDIA");
             return;
         }
-        crearUsuario("admin", contrasenaAdmin, "Administración Las Torres", "ADMIN");
-        crearUsuario("guardia", contrasenaGuardia, "Caseta de vigilancia", "GUARDIA");
+        actualizarContrasena("admin", contrasenaAdmin);
+        actualizarContrasena("guardia", contrasenaGuardia);
+    }
+
+    /**
+     * Si la variable de entorno trae una contraseña distinta a la guardada, la actualiza.
+     * Si la variable no está definida, no toca nada.
+     */
+    private void actualizarContrasena(String usuario, String contrasena) {
+        if (contrasena == null || contrasena.isBlank()) {
+            return;
+        }
+        usuarioRepository.findByUsuarioAndActivoTrue(usuario).ifPresent(entity -> {
+            if (!passwordEncoder.matches(contrasena, entity.getContrasena())) {
+                entity.setContrasena(passwordEncoder.encode(contrasena));
+                usuarioRepository.save(entity);
+                log.warn("Contraseña de '{}' actualizada desde la variable de entorno", usuario);
+            }
+        });
     }
 
     private void crearUsuario(String usuario, String contrasena, String nombre, String rol) {

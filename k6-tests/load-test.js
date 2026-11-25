@@ -5,7 +5,11 @@ import { check, group, sleep } from 'k6';
 // Configuración por defecto apuntando a Render; se puede sobrescribir con -e
 const BASE_URL = (__ENV.BASE_URL || 'https://condominios-las-torres.onrender.com').replace(/\/+$/, '');
 const K6_USER = __ENV.K6_USER || 'admin';
-const K6_PASSWORD = __ENV.K6_PASSWORD || 'Diego2026';
+// La contraseña NUNCA se escribe en el código: se pasa al ejecutar, con -e K6_PASSWORD=...
+const K6_PASSWORD = __ENV.K6_PASSWORD;
+if (!K6_PASSWORD) {
+  throw new Error('Falta la contraseña: ejecuta k6 con -e K6_PASSWORD=tu_contrasena');
+}
 
 const AUTH_HEADER = `Basic ${encoding.b64encode(`${K6_USER}:${K6_PASSWORD}`)}`;
 
