@@ -1,8 +1,23 @@
 {
   "info": {
     "name": "Condominios Las Torres",
-    "description": "Pruebas de la API de control de acceso. Usa HTTP Basic: llena las variables usuario y contrasena de la colección.",
+    "description": "Set de pruebas de la API de control de acceso del condominio Las Torres.\n\nCómo usarla:\n1. En la pestaña Variables de la colección, escribe en Current value la contraseña de admin (contrasena) y la de guardia (contrasenaGuardia). No las pongas en Initial value: esa columna se guarda en el archivo.\n2. Ajusta baseUrl: http://localhost:8081 (local o Docker) o https://condominios-las-torres.onrender.com.\n3. Clic derecho en la colección > Run collection > Run. Las carpetas deben correr en orden.\n\nLa colección crea una vivienda, un residente y un visitante de prueba y al final los borra. El acceso de prueba se queda en la bitácora. Se recomienda correrla contra Docker (docker compose up), que usa una base de datos aparte.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "basic",
+    "basic": [
+      {
+        "key": "username",
+        "value": "{{usuario}}",
+        "type": "string"
+      },
+      {
+        "key": "password",
+        "value": "{{contrasena}}",
+        "type": "string"
+      }
+    ]
   },
   "variable": [
     {
@@ -16,11 +31,226 @@
     {
       "key": "contrasena",
       "value": ""
+    },
+    {
+      "key": "usuarioGuardia",
+      "value": "guardia"
+    },
+    {
+      "key": "contrasenaGuardia",
+      "value": ""
+    },
+    {
+      "key": "sufijo",
+      "value": ""
+    },
+    {
+      "key": "viviendaId",
+      "value": ""
+    },
+    {
+      "key": "residenteId",
+      "value": ""
+    },
+    {
+      "key": "visitanteId",
+      "value": ""
+    },
+    {
+      "key": "accesoId",
+      "value": ""
     }
   ],
   "item": [
     {
-      "name": "Viviendas",
+      "name": "0. Seguridad",
+      "description": "Quién puede usar la API. No crea datos.",
+      "item": [
+        {
+          "name": "Sin usuario ni contraseña",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/viviendas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "viviendas"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 401 Sin autenticar', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Contraseña incorrecta",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/viviendas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "viviendas"
+              ]
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{usuario}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "contrasena-incorrecta",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 401 Sin autenticar', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Guardia intenta crear una vivienda",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/viviendas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "viviendas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"torre\": \"X\",\n  \"numero\": \"1\",\n  \"piso\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{usuarioGuardia}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{contrasenaGuardia}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "El guardia solo puede consultar y usar la caseta."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 403 Sin permiso', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Guardia consulta quién está dentro",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/accesos/dentro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "accesos",
+                "dentro"
+              ]
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{usuarioGuardia}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{contrasenaGuardia}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Regresa una lista', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "1. Viviendas",
       "item": [
         {
           "name": "Listar viviendas",
@@ -38,26 +268,19 @@
                 "viviendas"
               ]
             }
-          }
-        },
-        {
-          "name": "Obtener vivienda 1",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/viviendas/1",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "viviendas",
-                "1"
-              ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Regresa una lista', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
             }
-          }
+          ]
         },
         {
           "name": "Crear vivienda",
@@ -82,17 +305,71 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"torre\": \"C\",\n  \"numero\": \"301\",\n  \"piso\": 3\n}",
+              "raw": "{\n  \"torre\": \"P\",\n  \"numero\": \"{{sufijo}}\",\n  \"piso\": 1\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Número único en cada corrida, para no chocar con datos de corridas anteriores",
+                  "pm.collectionVariables.set('sufijo', String(Date.now()).slice(-6));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201 Creado', () => pm.response.to.have.status(201));",
+                  "pm.test('Regresa el id creado', () => pm.expect(pm.response.json().id).to.be.above(0));",
+                  "pm.collectionVariables.set('viviendaId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Crear vivienda duplicada (409)",
+          "name": "Consultar la vivienda creada",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/viviendas/{{viviendaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "viviendas",
+                "{{viviendaId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Es la vivienda creada', () => pm.expect(pm.response.json().etiqueta).to.eql('Torre P - ' + pm.collectionVariables.get('sufijo')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear vivienda duplicada",
           "request": {
             "method": "POST",
             "header": [
@@ -114,17 +391,30 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"torre\": \"A\",\n  \"numero\": \"101\",\n  \"piso\": 1\n}",
+              "raw": "{\n  \"torre\": \"p\",\n  \"numero\": \"{{sufijo}}\",\n  \"piso\": 1\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
+            },
+            "description": "Misma torre y número (aunque la torre vaya en minúscula)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 409 Regla de negocio', () => pm.response.to.have.status(409));",
+                  "pm.test('El mensaje explica el error', () => pm.expect(pm.response.json().mensaje).to.include(\"Ya existe\"));"
+                ]
+              }
             }
-          }
+          ]
         },
         {
-          "name": "Crear vivienda inválida (400)",
+          "name": "Crear vivienda con datos inválidos",
           "request": {
             "method": "POST",
             "header": [
@@ -153,10 +443,65 @@
                 }
               }
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400 Datos inválidos', () => pm.response.to.have.status(400));",
+                  "pm.test('Indica qué campos están mal', () => pm.expect(pm.response.json().detalles).to.be.an('array').that.is.not.empty);"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Actualizar vivienda 4",
+          "name": "JSON mal formado",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/viviendas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "viviendas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"torre\": \"A\", ",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400 Datos inválidos', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar la vivienda",
           "request": {
             "method": "PUT",
             "header": [
@@ -166,7 +511,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/viviendas/4",
+              "raw": "{{baseUrl}}/api/v1/viviendas/{{viviendaId}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -174,46 +519,38 @@
                 "api",
                 "v1",
                 "viviendas",
-                "4"
+                "{{viviendaId}}"
               ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"torre\": \"B\",\n  \"numero\": \"203\",\n  \"piso\": 2\n}",
+              "raw": "{\n  \"torre\": \"P\",\n  \"numero\": \"{{sufijo}}\",\n  \"piso\": 2\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
             }
-          }
-        },
-        {
-          "name": "Borrar vivienda con residentes (409)",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/viviendas/1",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "viviendas",
-                "1"
-              ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200 OK', () => pm.response.to.have.status(200));"
+                ]
+              }
             }
-          }
+          ]
         },
         {
-          "name": "Vivienda inexistente (404)",
+          "name": "Vivienda inexistente",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/viviendas/999",
+              "raw": "{{baseUrl}}/api/v1/viviendas/999999",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -221,15 +558,56 @@
                 "api",
                 "v1",
                 "viviendas",
-                "999"
+                "999999"
               ]
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 404 No existe', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Id que no es número",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/viviendas/abc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "viviendas",
+                "abc"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400 Datos inválidos', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
     {
-      "name": "Residentes",
+      "name": "2. Residentes",
       "item": [
         {
           "name": "Listar residentes",
@@ -247,7 +625,19 @@
                 "residentes"
               ]
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Regresa una lista', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Crear residente",
@@ -272,17 +662,61 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"María\",\n  \"apellidos\": \"Pérez Gómez\",\n  \"correo\": \"maria@ejemplo.com\",\n  \"telefono\": \"5512345678\",\n  \"viviendaId\": 2\n}",
+              "raw": "{\n  \"nombre\": \"Prueba\",\n  \"apellidos\": \"Postman\",\n  \"correo\": \"postman{{sufijo}}@ejemplo.com\",\n  \"telefono\": \"5512345678\",\n  \"viviendaId\": {{viviendaId}}\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201 Creado', () => pm.response.to.have.status(201));",
+                  "pm.test('Regresa el id creado', () => pm.expect(pm.response.json().id).to.be.above(0));",
+                  "pm.collectionVariables.set('residenteId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Crear residente con correo inválido (400)",
+          "name": "Consultar el residente creado",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/residentes/{{residenteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "residentes",
+                "{{residenteId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Vive en la vivienda creada', () => pm.expect(pm.response.json().viviendaId).to.eql(Number(pm.collectionVariables.get('viviendaId'))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Correo repetido",
           "request": {
             "method": "POST",
             "header": [
@@ -304,17 +738,116 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Pedro\",\n  \"apellidos\": \"Luna\",\n  \"correo\": \"no-es-correo\",\n  \"telefono\": \"123\",\n  \"viviendaId\": 2\n}",
+              "raw": "{\n  \"nombre\": \"Otra\",\n  \"apellidos\": \"Persona\",\n  \"correo\": \"POSTMAN{{sufijo}}@ejemplo.com\",\n  \"telefono\": \"5512345678\",\n  \"viviendaId\": {{viviendaId}}\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 409 Regla de negocio', () => pm.response.to.have.status(409));",
+                  "pm.test('El mensaje explica el error', () => pm.expect(pm.response.json().mensaje).to.include(\"correo\"));"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Actualizar residente 2",
+          "name": "Correo y teléfono inválidos",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/residentes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "residentes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Pedro\",\n  \"apellidos\": \"Luna\",\n  \"correo\": \"no-es-correo\",\n  \"telefono\": \"123\",\n  \"viviendaId\": {{viviendaId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400 Datos inválidos', () => pm.response.to.have.status(400));",
+                  "pm.test('Indica qué campos están mal', () => pm.expect(pm.response.json().detalles).to.be.an('array').that.is.not.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Vivienda inexistente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/residentes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "residentes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Pedro\",\n  \"apellidos\": \"Luna\",\n  \"correo\": \"pedro{{sufijo}}@ejemplo.com\",\n  \"telefono\": \"5512345678\",\n  \"viviendaId\": 999999\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 404 No existe', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar el residente",
           "request": {
             "method": "PUT",
             "header": [
@@ -324,7 +857,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/residentes/2",
+              "raw": "{{baseUrl}}/api/v1/residentes/{{residenteId}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -332,43 +865,67 @@
                 "api",
                 "v1",
                 "residentes",
-                "2"
+                "{{residenteId}}"
               ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Carlos\",\n  \"apellidos\": \"Mendoza López\",\n  \"correo\": \"carlos.mendoza@ejemplo.com\",\n  \"telefono\": \"5500001111\",\n  \"viviendaId\": 3\n}",
+              "raw": "{\n  \"nombre\": \"Prueba\",\n  \"apellidos\": \"Postman Actualizado\",\n  \"correo\": \"postman{{sufijo}}@ejemplo.com\",\n  \"telefono\": \"5500001111\",\n  \"viviendaId\": {{viviendaId}}\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
             }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Visitantes",
-      "item": [
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200 OK', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
         {
-          "name": "Listar visitantes",
+          "name": "Borrar vivienda que tiene residentes",
           "request": {
-            "method": "GET",
+            "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/visitantes",
+              "raw": "{{baseUrl}}/api/v1/viviendas/{{viviendaId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "v1",
-                "visitantes"
+                "viviendas",
+                "{{viviendaId}}"
               ]
             }
-          }
-        },
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 409 Regla de negocio', () => pm.response.to.have.status(409));",
+                  "pm.test('El mensaje explica el error', () => pm.expect(pm.response.json().mensaje).to.include(\"residentes\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Visitantes",
+      "item": [
         {
           "name": "Crear visitante",
           "request": {
@@ -392,22 +949,65 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Sofía\",\n  \"apellidos\": \"Castro Vega\",\n  \"placas\": \"XYZ9876\",\n  \"residenteId\": 1\n}",
+              "raw": "{\n  \"nombre\": \"Visita\",\n  \"apellidos\": \"Postman\",\n  \"placas\": \"abc1234\",\n  \"residenteId\": {{residenteId}}\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201 Creado', () => pm.response.to.have.status(201));",
+                  "pm.test('Regresa el id creado', () => pm.expect(pm.response.json().id).to.be.above(0));",
+                  "pm.collectionVariables.set('visitanteId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Borrar visitante que está dentro (409)",
+          "name": "Listar visitantes",
           "request": {
-            "method": "DELETE",
+            "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/visitantes/1",
+              "raw": "{{baseUrl}}/api/v1/visitantes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "visitantes"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Regresa una lista', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar el visitante creado",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/visitantes/{{visitanteId}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -415,53 +1015,146 @@
                 "api",
                 "v1",
                 "visitantes",
-                "1"
+                "{{visitanteId}}"
               ]
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Las placas se guardan en mayúsculas', () => pm.expect(pm.response.json().placas).to.eql('ABC1234'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar el visitante",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/visitantes/{{visitanteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "visitantes",
+                "{{visitanteId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Visita\",\n  \"apellidos\": \"Postman\",\n  \"placas\": \"\",\n  \"residenteId\": {{residenteId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200 OK', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Residente inexistente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/visitantes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "visitantes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Visita\",\n  \"apellidos\": \"Fantasma\",\n  \"placas\": \"\",\n  \"residenteId\": 999999\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 404 No existe', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Borrar residente que tiene visitantes",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/residentes/{{residenteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "residentes",
+                "{{residenteId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 409 Regla de negocio', () => pm.response.to.have.status(409));",
+                  "pm.test('El mensaje explica el error', () => pm.expect(pm.response.json().mensaje).to.include(\"visitantes\"));"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
     {
-      "name": "Accesos",
+      "name": "4. Caseta (accesos)",
       "item": [
-        {
-          "name": "Bitácora completa",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/accesos",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "accesos"
-              ]
-            }
-          }
-        },
-        {
-          "name": "¿Quién está dentro?",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/accesos/dentro",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "accesos",
-                "dentro"
-              ]
-            }
-          }
-        },
         {
           "name": "Registrar entrada",
           "request": {
@@ -486,17 +1179,30 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"visitanteId\": 2,\n  \"motivo\": \"Entrega de paquete\"\n}",
+              "raw": "{\n  \"visitanteId\": {{visitanteId}},\n  \"motivo\": \"Prueba de Postman\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201 Creado', () => pm.response.to.have.status(201));",
+                  "pm.test('Regresa el id creado', () => pm.expect(pm.response.json().id).to.be.above(0));",
+                  "pm.collectionVariables.set('accesoId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Entrada de alguien que ya está dentro (409)",
+          "name": "Entrada de alguien que ya está dentro",
           "request": {
             "method": "POST",
             "header": [
@@ -519,22 +1225,34 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"visitanteId\": 1,\n  \"motivo\": \"Visita\"\n}",
+              "raw": "{\n  \"visitanteId\": {{visitanteId}},\n  \"motivo\": \"Otra vez\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 409 Regla de negocio', () => pm.response.to.have.status(409));",
+                  "pm.test('El mensaje explica el error', () => pm.expect(pm.response.json().mensaje).to.include(\"ya está dentro\"));"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Registrar salida del acceso 1",
+          "name": "Quién está dentro",
           "request": {
-            "method": "PUT",
+            "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/accesos/1/salida",
+              "raw": "{{baseUrl}}/api/v1/accesos/dentro",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -542,28 +1260,521 @@
                 "api",
                 "v1",
                 "accesos",
-                "1",
+                "dentro"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('El visitante aparece dentro', () => pm.expect(pm.response.json().map(a => a.id)).to.include(Number(pm.collectionVariables.get('accesoId'))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Borrar visitante que está dentro",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/visitantes/{{visitanteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "visitantes",
+                "{{visitanteId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 409 Regla de negocio', () => pm.response.to.have.status(409));",
+                  "pm.test('El mensaje explica el error', () => pm.expect(pm.response.json().mensaje).to.include(\"dentro\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Registrar salida",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/accesos/{{accesoId}}/salida",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "accesos",
+                "{{accesoId}}",
                 "salida"
               ]
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200 OK', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Salida repetida",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/accesos/{{accesoId}}/salida",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "accesos",
+                "{{accesoId}}",
+                "salida"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 409 Regla de negocio', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Bitácora completa",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/accesos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "accesos"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('El acceso ya tiene hora de salida', () => {",
+                  "    const acceso = pm.response.json().find(a => a.id === Number(pm.collectionVariables.get('accesoId')));",
+                  "    pm.expect(acceso.fechaSalida).to.not.be.null;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Acceso inexistente",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/accesos/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "accesos",
+                "999999"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 404 No existe', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Reportes",
+      "item": [
+        {
+          "name": "Bitácora en PDF",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reportes/bitacora/pdf",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reportes",
+                "bitacora",
+                "pdf"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Es un archivo PDF', () => pm.expect(pm.response.headers.get('Content-Type')).to.include(\"application/pdf\"));",
+                  "pm.test('Se descarga como .pdf', () => pm.expect(pm.response.headers.get('Content-Disposition')).to.include('.pdf'));",
+                  "pm.test('El archivo no está vacío', () => pm.expect(pm.response.responseSize).to.be.above(100));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Bitácora en Excel",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reportes/bitacora/excel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reportes",
+                "bitacora",
+                "excel"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Es un archivo XLSX', () => pm.expect(pm.response.headers.get('Content-Type')).to.include(\"spreadsheetml\"));",
+                  "pm.test('Se descarga como .xlsx', () => pm.expect(pm.response.headers.get('Content-Disposition')).to.include('.xlsx'));",
+                  "pm.test('El archivo no está vacío', () => pm.expect(pm.response.responseSize).to.be.above(100));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Quién está dentro en PDF",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reportes/bitacora/pdf?soloDentro=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reportes",
+                "bitacora",
+                "pdf"
+              ],
+              "query": [
+                {
+                  "key": "soloDentro",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Es un archivo PDF', () => pm.expect(pm.response.headers.get('Content-Type')).to.include(\"application/pdf\"));",
+                  "pm.test('Se descarga como .pdf', () => pm.expect(pm.response.headers.get('Content-Disposition')).to.include('.pdf'));",
+                  "pm.test('El archivo no está vacío', () => pm.expect(pm.response.responseSize).to.be.above(100));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Visitantes en PDF",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reportes/visitantes/pdf",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reportes",
+                "visitantes",
+                "pdf"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Es un archivo PDF', () => pm.expect(pm.response.headers.get('Content-Type')).to.include(\"application/pdf\"));",
+                  "pm.test('Se descarga como .pdf', () => pm.expect(pm.response.headers.get('Content-Disposition')).to.include('.pdf'));",
+                  "pm.test('El archivo no está vacío', () => pm.expect(pm.response.responseSize).to.be.above(100));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Visitantes en Excel",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reportes/visitantes/excel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reportes",
+                "visitantes",
+                "excel"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Es un archivo XLSX', () => pm.expect(pm.response.headers.get('Content-Type')).to.include(\"spreadsheetml\"));",
+                  "pm.test('Se descarga como .xlsx', () => pm.expect(pm.response.headers.get('Content-Disposition')).to.include('.xlsx'));",
+                  "pm.test('El archivo no está vacío', () => pm.expect(pm.response.responseSize).to.be.above(100));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reporte sin autenticar",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reportes/bitacora/pdf",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reportes",
+                "bitacora",
+                "pdf"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 401 Sin autenticar', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6. Limpieza",
+      "description": "Borra lo que creó la colección. El acceso de prueba se queda en la bitácora, porque la bitácora no se borra por diseño.",
+      "item": [
+        {
+          "name": "Borrar el visitante",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/visitantes/{{visitanteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "visitantes",
+                "{{visitanteId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200 OK', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Borrar el residente",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/residentes/{{residenteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "residentes",
+                "{{residenteId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200 OK', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Borrar la vivienda",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/viviendas/{{viviendaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "viviendas",
+                "{{viviendaId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200 OK', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "La vivienda borrada ya no aparece",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/viviendas/{{viviendaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "viviendas",
+                "{{viviendaId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 404 No existe', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
         }
       ]
     }
-  ],
-  "auth": {
-    "type": "basic",
-    "basic": [
-      {
-        "key": "username",
-        "value": "{{usuario}}",
-        "type": "string"
-      },
-      {
-        "key": "password",
-        "value": "{{contrasena}}",
-        "type": "string"
-      }
-    ]
-  }
+  ]
 }

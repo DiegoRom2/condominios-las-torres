@@ -101,7 +101,18 @@ gradlew.bat bootRun
 El sistema queda en `http://localhost:8081` (otro puerto: variable de entorno `PORT`).
 
 - Swagger para probar desde el navegador: `http://localhost:8081/swagger-ui.html`
-- Colección de Postman: `postman/LasTorres.postman_collection.json` (en sus variables se ponen `usuario` y `contrasena`)
+- Colección de Postman: `postman/LasTorres.postman_collection.json` (ver abajo)
+
+### Pruebas con Postman
+
+La colección tiene 45 peticiones con pruebas automáticas: seguridad (sin usuario, contraseña incorrecta, guardia sin permiso), CRUD de viviendas, residentes y visitantes, reglas de negocio de la caseta y descarga de reportes.
+
+1. En Postman: **Import** → elige el archivo de la colección.
+2. En la pestaña **Variables** de la colección, escribe en **Current value** la contraseña de `admin` (`contrasena`) y la de `guardia` (`contrasenaGuardia`). No las pongas en *Initial value*, porque esa columna se guarda en el archivo.
+3. Ajusta `baseUrl` (`http://localhost:8081` o la URL de Render).
+4. Clic derecho en la colección → **Run collection** → **Run**.
+
+La colección crea una vivienda, un residente y un visitante de prueba y al final los borra. Se recomienda correrla contra Docker (`docker compose up`), que usa una base de datos aparte.
 
 ### Con Docker
 
